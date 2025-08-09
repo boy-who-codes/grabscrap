@@ -1,0 +1,343 @@
+{% extends 'base.html' %}
+
+{% block title %}Pending KYC Applications - KABAADWALA™{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{% url 'kyc_management:dashboard' %}">
+                            <i class="fas fa-tachometer-alt me-2"></i>
+                            KYC Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active text-white" href="{% url 'kyc_management:pending_list' %}">
+                            <i class="fas fa-clock me-2"></i>
+                            Pending Applications
+                            {% if pending_vendors.count > 0 %}
+                                <span class="badge bg-warning text-dark ms-2">{{ pending_vendors.count }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{% url 'admin_dashboard' %}">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Back to Admin Dashboard
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2 text-white">Pending KYC Applications</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <div class="btn-group me-2">
+                        <a href="{% url 'kyc_management:dashboard' %}" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- Pending Applications -->
+            <div class="card shadow mb-4" style="background: #121212; border: 1px solid #333;">
+                <div class="card-header py-3" style="background: #1a1a1a; border-bottom: 1px solid #333;">
+                    <h6 class="m-0 font-weight-bold text-white">
+                        <i class="fas fa-clock me-2"></i>Pending KYC Applications ({{ pending_vendors.count }})
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if pending_vendors %}
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Vendor</th>
+                                        <th>Store Details</th>
+                                        <th>KYC Documents</th>
+                                        <th>Submitted</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for vendor_profile in pending_vendors %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if vendor_profile.user.profile_photo %}
+                                                    <img src="{{ vendor_profile.user.profile_photo.url }}" 
+                                                         class="rounded-circle me-2" width="40" height="40">
+                                                {% else %}
+                                                    <div class="bg-secondary rounded-circle me-2 d-flex align-items-center justify-content-center" 
+                                                         style="width: 40px; height: 40px;">
+                                                        <i class="fas fa-user text-white"></i>
+                                                    </div>
+                                                {% endif %}
+                                                <div>
+                                                    <div class="text-white fw-bold">{{ vendor_profile.user.full_name }}</div>
+                                                    <small class="text-secondary">{{ vendor_profile.user.email }}</small>
+                                                    {% if vendor_profile.user.mobile_number %}
+                                                        <br><small class="text-secondary">{{ vendor_profile.user.mobile_number }}</small>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="text-white">
+                                                <strong>{{ vendor_profile.store_name }}</strong><br>
+                                                <small class="text-secondary">{{ vendor_profile.business_email }}</small><br>
+                                                {% if vendor_profile.business_phone %}
+                                                    <small class="text-secondary">{{ vendor_profile.business_phone }}</small>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="text-white">
+                                                <div><strong>PAN:</strong> {{ vendor_profile.pan|slice:":4" }}****</div>
+                                                {% if vendor_profile.gstin %}
+                                                    <div><strong>GSTIN:</strong> {{ vendor_profile.gstin|slice:":4" }}****</div>
+                                                {% endif %}
+                                                <div class="mt-2">
+                                                    {% if vendor_profile.kyc.pan_document %}
+                                                        <span class="badge bg-success me-1">PAN Doc ✓</span>
+                                                    {% else %}
+                                                        <span class="badge bg-danger me-1">PAN Doc ✗</span>
+                                                    {% endif %}
+                                                    {% if vendor_profile.kyc.gstin_document %}
+                                                        <span class="badge bg-success">GSTIN Doc ✓</span>
+                                                    {% else %}
+                                                        <span class="badge bg-warning text-dark">GSTIN Doc (Optional)</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-white">
+                                            {{ vendor_profile.created_at|date:"M d, Y" }}<br>
+                                            <small class="text-secondary">{{ vendor_profile.created_at|timesince }} ago</small>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="{% url 'kyc_management:kyc_detail' vendor_profile.id %}" 
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye"></i> Review
+                                                </a>
+                                                <button type="button" class="btn btn-sm btn-success" 
+                                                        data-vendor-id="{{ vendor_profile.id }}"
+                                                        onclick="quickApprove(this.getAttribute('data-vendor-id'))">
+                                                    <i class="fas fa-check"></i> Approve
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-danger" 
+                                                        data-vendor-id="{{ vendor_profile.id }}"
+                                                        onclick="quickReject(this.getAttribute('data-vendor-id'))">
+                                                    <i class="fas fa-times"></i> Reject
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                            <h4 class="text-white">No Pending Applications</h4>
+                            <p class="text-secondary">All KYC applications have been reviewed!</p>
+                            <a href="{% url 'kyc_management:dashboard' %}" class="btn btn-success">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Quick Approval Modal -->
+<div class="modal fade" id="quickApproveModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content" style="background: #121212; border: 1px solid #333;">
+            <div class="modal-header" style="background: #1a1a1a; border-bottom: 1px solid #333;">
+                <h5 class="modal-title text-white">
+                    <i class="fas fa-check-circle text-success me-2"></i>Quick Approve KYC
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-white">Are you sure you want to approve this KYC application?</p>
+                <div class="form-group">
+                    <label for="adminNotes" class="text-white">Admin Notes (Optional):</label>
+                    <textarea class="form-control bg-dark text-white" id="adminNotes" rows="3" 
+                              placeholder="Add any internal notes..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid #333;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="confirmApprove()">
+                    <i class="fas fa-check me-2"></i>Approve KYC
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Rejection Modal -->
+<div class="modal fade" id="quickRejectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content" style="background: #121212; border: 1px solid #333;">
+            <div class="modal-header" style="background: #1a1a1a; border-bottom: 1px solid #333;">
+                <h5 class="modal-title text-white">
+                    <i class="fas fa-times-circle text-danger me-2"></i>Reject KYC Application
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-white">Please provide a reason for rejection:</p>
+                <div class="form-group">
+                    <label for="rejectionReason" class="text-white">Rejection Reason *:</label>
+                    <textarea class="form-control bg-dark text-white" id="rejectionReason" rows="3" 
+                              placeholder="Please specify why this KYC application is being rejected..." required></textarea>
+                </div>
+                <div class="form-group mt-3">
+                    <label for="adminNotesReject" class="text-white">Admin Notes (Optional):</label>
+                    <textarea class="form-control bg-dark text-white" id="adminNotesReject" rows="2" 
+                              placeholder="Add any internal notes..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid #333;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="confirmReject()">
+                    <i class="fas fa-times me-2"></i>Reject KYC
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentVendorId = null;
+
+function quickApprove(vendorId) {
+    currentVendorId = vendorId;
+    document.getElementById('adminNotes').value = '';
+    new bootstrap.Modal(document.getElementById('quickApproveModal')).show();
+}
+
+function quickReject(vendorId) {
+    currentVendorId = vendorId;
+    document.getElementById('rejectionReason').value = '';
+    document.getElementById('adminNotesReject').value = '';
+    new bootstrap.Modal(document.getElementById('quickRejectModal')).show();
+}
+
+function confirmApprove() {
+    const adminNotes = document.getElementById('adminNotes').value;
+    
+    fetch('{% url "kyc_management:approve_ajax" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({
+            vendor_id: currentVendorId,
+            action: 'approve',
+            admin_notes: adminNotes
+        })
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+        if (data.success) {
+            showAlert('success', data.message);
+            setTimeout(function() {
+                location.reload();
+            }, 1500);
+        } else {
+            showAlert('danger', data.message);
+        }
+    })
+    .catch(function(error) {
+        showAlert('danger', 'An error occurred. Please try again.');
+    });
+    
+    bootstrap.Modal.getInstance(document.getElementById('quickApproveModal')).hide();
+}
+
+function confirmReject() {
+    const rejectionReason = document.getElementById('rejectionReason').value;
+    const adminNotes = document.getElementById('adminNotesReject').value;
+    
+    if (!rejectionReason.trim()) {
+        showAlert('danger', 'Please provide a rejection reason.');
+        return;
+    }
+    
+    fetch('{% url "kyc_management:approve_ajax" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({
+            vendor_id: currentVendorId,
+            action: 'reject',
+            rejection_reason: rejectionReason,
+            admin_notes: adminNotes
+        })
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+        if (data.success) {
+            showAlert('success', data.message);
+            setTimeout(function() {
+                location.reload();
+            }, 1500);
+        } else {
+            showAlert('danger', data.message);
+        }
+    })
+    .catch(function(error) {
+        showAlert('danger', 'An error occurred. Please try again.');
+    });
+    
+    bootstrap.Modal.getInstance(document.getElementById('quickRejectModal')).hide();
+}
+
+function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const container = document.querySelector('main');
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+}
+</script>
+
+<!-- CSRF Token for AJAX requests -->
+{% csrf_token %}
+{% endblock %} 

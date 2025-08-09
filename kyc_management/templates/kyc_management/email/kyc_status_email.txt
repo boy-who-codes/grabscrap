@@ -1,0 +1,37 @@
+KABAADWALA™ - KYC Application Status Update
+
+Dear {{ vendor.full_name|default:vendor.username }},
+
+Your KYC application for {{ vendor_profile.store_name }} has been reviewed.
+
+Status: {% if status == 'approved' %}APPROVED{% else %}REJECTED{% endif %}
+
+{% if status == 'approved' %}
+Congratulations! Your KYC application has been approved. You can now:
+- Start listing your products on KABAADWALA™
+- Receive orders from customers
+- Access your vendor dashboard
+- Manage your store profile
+
+Access your dashboard: https://kabaadwala.com/vendor/dashboard/
+
+{% else %}
+Unfortunately, your KYC application has been rejected for the following reason:
+
+{{ kyc_approval.rejection_reason }}
+
+Please address the issues mentioned above and resubmit your KYC application.
+
+Resubmit KYC: https://kabaadwala.com/accounts/kyc/
+{% endif %}
+
+Application Details:
+- Store Name: {{ vendor_profile.store_name }}
+- Business Email: {{ vendor_profile.business_email }}
+- Review Date: {{ kyc_approval.reviewed_at|date:"F d, Y" }}
+
+If you have any questions, please contact our support team at support@kabaadwala.com
+
+---
+© 2024 KABAADWALA™. All rights reserved.
+This is an automated message. Please do not reply to this email. 

@@ -1,0 +1,538 @@
+{% extends 'base.html' %}
+{% block title %}Profile Setup - KABAADWALA™{% endblock %}
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 70vh;">
+  <div class="card p-4 shadow-lg" style="max-width: 500px; width: 100%; background: #121212; color: #fff;">
+    <h3 class="mb-3 text-center" style="color: #6BFF57;">Profile Setup</h3>
+    <p class="text-center mb-2" style="color: #fff;">Account type: <span style="color: #6BFF57;">{{ account_type|title }}</span></p>
+    <div class="mb-3">
+      <div class="progress" style="height: 8px;">
+        <div id="progress-bar" class="progress-bar bg-success" role="progressbar" style="width: 25%" aria-valuenow="1" aria-valuemin="1" aria-valuemax="4"></div>
+      </div>
+      <div class="text-center mt-2" style="color:#C7C7C7; font-size:0.95rem;">
+        Step <span id="step-indicator">1</span> of <span id="step-total">4</span>
+      </div>
+    </div>
+    <form id="profile-setup-form" method="post" autocomplete="off" enctype="multipart/form-data">
+      {% csrf_token %}
+      <!-- Step 1: Basic Info -->
+      <div class="step" id="step-1">
+        <div class="mb-3">
+          <label for="id_full_name" class="form-label">Full Name</label>
+          <input type="text" name="full_name" class="form-control text-white" id="id_full_name" value="{{ user.full_name }}" style="background:#18181C; color:#fff;" required>
+        </div>
+      </div>
+      <!-- Step 2: Store Address (Vendor only) -->
+      <div class="step" id="step-2" style="display:none;" data-account-type="vendor">
+        <div class="mb-3">
+          <label for="id_line1" class="form-label">Store Address Line 1</label>
+          <input type="text" name="line1" class="form-control text-white" id="id_line1" value="{{ user.vendor_profile.store_address.line1|default:'' }}" style="background:#18181C; color:#fff;" required>
+        </div>
+        <div class="mb-3">
+          <label for="id_line2" class="form-label">Store Address Line 2</label>
+          <input type="text" name="line2" class="form-control text-white" id="id_line2" value="{{ user.vendor_profile.store_address.line2|default:'' }}" style="background:#18181C; color:#fff;">
+        </div>
+        <div class="mb-3">
+          <label for="id_city" class="form-label">City</label>
+          <input type="text" name="city" class="form-control text-white" id="id_city" value="{{ user.vendor_profile.store_address.city|default:'' }}" style="background:#18181C; color:#fff;" required readonly>
+        </div>
+        <div class="mb-3">
+          <label for="id_state" class="form-label">State</label>
+          <input type="text" name="state" class="form-control text-white" id="id_state" value="{{ user.vendor_profile.store_address.state|default:'' }}" style="background:#18181C; color:#fff;" required readonly>
+        </div>
+        <div class="mb-3">
+          <label for="id_pincode" class="form-label">Pincode</label>
+          <input type="tel" name="pincode" class="form-control text-white" id="id_pincode" value="{{ user.vendor_profile.store_address.pincode|default:'' }}" style="background:#18181C; color:#fff;" required inputmode="numeric" pattern="[0-9]*" maxlength="6">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Store Location</label>
+          <div id="map" style="height: 280px; border-radius: 12px; margin-bottom: 10px;"></div>
+          <div class="d-flex gap-2 mb-2">
+            <button type="button" id="use-location-btn" class="btn btn-outline-success btn-sm">Use Current Location</button>
+          </div>
+          <div class="row g-2">
+            <div class="col">
+              <input type="text" name="latitude" id="latitude" class="form-control text-white" style="background:#18181C; color:#fff;" placeholder="Latitude" readonly required>
+            </div>
+            <div class="col">
+              <input type="text" name="longitude" id="longitude" class="form-control text-white" style="background:#18181C; color:#fff;" placeholder="Longitude" readonly required>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Step 3: KYC (Vendor only) -->
+      <div class="step" id="step-3" style="display:none;" data-account-type="vendor">
+        <div class="mb-3">
+          <label for="id_pan_number" class="form-label">PAN Number</label>
+          <input type="text" name="pan" class="form-control text-white" id="id_pan_number" value="{{ user.vendor_profile.pan|default:'' }}" style="background:#18181C; color:#fff;" required>
+        </div>
+        <div class="mb-3">
+          <label for="id_pan_image" class="form-label">PAN Document (Image)</label>
+          <input type="file" name="pan_image" class="form-control text-white" id="id_pan_image" accept="image/*" style="background:#18181C; color:#fff;" required>
+        </div>
+        <div class="mb-3">
+          <label for="id_gstin" class="form-label">GSTIN Number</label>
+          <input type="text" name="gstin" class="form-control text-white" id="id_gstin" value="{{ user.vendor_profile.gstin|default:'' }}" style="background:#18181C; color:#fff;" required>
+        </div>
+        <div class="mb-3">
+          <label for="id_gstin_doc" class="form-label">GSTIN Document (Optional)</label>
+          <input type="file" name="gstin_doc" class="form-control text-white" id="id_gstin_doc" accept="application/pdf,image/*">
+        </div>
+      </div>
+      <!-- Step 4: Phone Verification (All) -->
+      <div class="step" id="step-4" style="display:none;">
+        <div class="mb-3">
+          <label class="form-label">Phone Number</label>
+          <input type="tel" class="form-control text-white" value="{{ user.mobile_number }}" readonly style="background:#18181C; color:#fff;" required inputmode="numeric" pattern="[0-9]*">
+        </div>
+        <div class="mb-3 d-flex gap-2">
+          <button type="button" id="send-otp-btn" class="btn btn-outline-success flex-fill">Send OTP</button>
+        </div>
+        <div class="mb-3" id="otp-input-group" style="display:none;">
+          <label for="id_phone_otp" class="form-label">Enter OTP</label>
+          <input type="tel" name="phone_otp" class="form-control text-white" id="id_phone_otp" maxlength="6" style="background:#18181C; color:#fff;" required inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code">
+          <button type="button" id="verify-otp-btn" class="btn btn-success w-100 mt-2">Verify OTP</button>
+        </div>
+        <div class="mb-3" id="otp-success-msg" style="display:none; color:#6BFF57; text-align:center; font-weight:600;">Phone number verified!</div>
+      </div>
+      <div class="d-flex justify-content-between mt-4">
+        <button type="button" id="prev-btn" class="btn btn-outline-secondary" style="display:none;">Back</button>
+        <button type="button" id="next-btn" class="btn btn-success ms-auto">Next</button>
+        <button type="submit" id="finish-btn" class="btn btn-success ms-auto" style="display:none;">Finish</button>
+      </div>
+    </form>
+  </div>
+</div>
+<!-- MapLibre GL JS -->
+<link href="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.css" rel="stylesheet" />
+<script src="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.js"></script>
+<script>
+  const steps = document.querySelectorAll('.step');
+  const nextBtn = document.getElementById('next-btn');
+  const prevBtn = document.getElementById('prev-btn');
+  const finishBtn = document.getElementById('finish-btn');
+  const progressBar = document.getElementById('progress-bar');
+  const stepIndicator = document.getElementById('step-indicator');
+  const stepTotal = document.getElementById('step-total');
+  const accountType = '{{ account_type }}';
+  let currentStep = 1;
+  let maxStep = accountType === 'vendor' ? 4 : 2;
+  stepTotal.textContent = accountType === 'vendor' ? '4' : '2';
+
+  function showStep(step) {
+    steps.forEach((el, idx) => {
+      const stepNumber = idx + 1;
+      const stepAccountType = el.getAttribute('data-account-type');
+      
+      // Show step only if it matches current account type or has no account type restriction
+      if (stepNumber === step) {
+        if (!stepAccountType || stepAccountType === accountType) {
+          el.style.display = '';
+        } else {
+          // Skip this step for this account type
+          if (step < maxStep) {
+            showStep(step + 1);
+            return;
+          }
+        }
+      } else {
+        el.style.display = 'none';
+      }
+    });
+    
+    stepIndicator.textContent = step;
+    progressBar.style.width = (step * 100 / maxStep) + '%';
+    progressBar.setAttribute('aria-valuenow', step);
+    prevBtn.style.display = step > 1 ? '' : 'none';
+    nextBtn.style.display = (step < maxStep) ? '' : 'none';
+    finishBtn.style.display = (step === maxStep && otpVerified) ? '' : 'none';
+    
+    // Remove any previous alert
+    const oldAlert = document.getElementById('step-alert');
+    if (oldAlert) oldAlert.remove();
+  }
+  function validateStep(step) {
+    const stepDiv = document.getElementById('step-' + step);
+    const requiredFields = stepDiv.querySelectorAll('[required]');
+    for (let field of requiredFields) {
+      if (field.offsetParent !== null && !field.value) {
+        field.focus();
+        return false;
+      }
+      // For file inputs
+      if (field.type === 'file' && field.offsetParent !== null && !field.files.length) {
+        field.focus();
+        return false;
+      }
+    }
+    return true;
+  }
+  function showStepAlert(msg) {
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-danger';
+    alert.id = 'step-alert';
+    alert.innerText = msg;
+    document.querySelector('.card').insertBefore(alert, document.getElementById('profile-setup-form'));
+  }
+  nextBtn.addEventListener('click', function() {
+    if (validateStep(currentStep)) {
+      if (currentStep < maxStep) {
+        currentStep++;
+        showStep(currentStep);
+      }
+    } else {
+      showStepAlert('Please fill all required fields before proceeding.');
+    }
+  });
+  prevBtn.addEventListener('click', function() {
+    if (currentStep > 1) {
+      currentStep--;
+      showStep(currentStep);
+    }
+  });
+  showStep(currentStep);
+
+  // MapLibre GL JS for Step 2
+  let map, marker;
+  function initMap() {
+    try {
+      map = new maplibregl.Map({
+        container: 'map',
+        style: {
+          version: 8,
+          sources: {
+            osm: {
+              type: 'raster',
+              tiles: [
+                'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+              ],
+              tileSize: 256,
+              attribution: '© OpenStreetMap contributors'
+            }
+          },
+          layers: [
+            {
+              id: 'osm',
+              type: 'raster',
+              source: 'osm',
+              minzoom: 0,
+              maxzoom: 19
+            }
+          ]
+        },
+        center: [77.209, 28.6139], // Default: New Delhi
+        zoom: 11,
+        attributionControl: true
+      });
+
+      // Wait for map to load
+      map.on('load', function() {
+        console.log('Map loaded successfully');
+        
+        // Add marker
+        marker = new maplibregl.Marker({ 
+          color: '#6BFF57',
+          draggable: true
+        })
+        .setLngLat([77.209, 28.6139])
+        .addTo(map);
+
+        // Set initial coordinates
+        document.getElementById('latitude').value = 28.6139;
+        document.getElementById('longitude').value = 77.209;
+
+        // Handle map clicks
+        map.on('click', function(e) {
+          marker.setLngLat(e.lngLat);
+          document.getElementById('latitude').value = e.lngLat.lat;
+          document.getElementById('longitude').value = e.lngLat.lng;
+          reverseGeocode(e.lngLat.lat, e.lngLat.lng);
+        });
+
+        // Handle marker drag
+        marker.on('dragend', function() {
+          const lngLat = marker.getLngLat();
+          document.getElementById('latitude').value = lngLat.lat;
+          document.getElementById('longitude').value = lngLat.lng;
+          reverseGeocode(lngLat.lat, lngLat.lng);
+        });
+
+        // Initial reverse geocode
+        reverseGeocode(28.6139, 77.209);
+      });
+
+      // Handle map errors
+      map.on('error', function(e) {
+        console.error('Map error:', e);
+        document.getElementById('map').innerHTML = '<div class="alert alert-warning">Map loading failed. Please refresh the page.</div>';
+      });
+
+    } catch (error) {
+      console.error('Error initializing map:', error);
+      document.getElementById('map').innerHTML = '<div class="alert alert-warning">Map initialization failed. Please check your internet connection.</div>';
+    }
+  }
+  let mapInitialized = false;
+  nextBtn.addEventListener('click', function() {
+    if (currentStep === 2 && !mapInitialized && accountType === 'vendor') {
+      setTimeout(initMap, 200);
+      mapInitialized = true;
+    }
+  });
+  
+  // Initialize map immediately if we're on step 2 and it's a vendor
+  if (currentStep === 2 && accountType === 'vendor') {
+    setTimeout(initMap, 200);
+    mapInitialized = true;
+  }
+  document.getElementById('use-location-btn').addEventListener('click', function() {
+    const btn = this;
+    const originalText = btn.innerHTML;
+    
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Getting location...';
+    
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        function(pos) {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          
+          if (marker && map) {
+            marker.setLngLat([lng, lat]);
+            map.setCenter([lng, lat]);
+            map.setZoom(15); // Zoom in closer for current location
+          }
+          
+          document.getElementById('latitude').value = lat;
+          document.getElementById('longitude').value = lng;
+          reverseGeocode(lat, lng);
+          
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+        },
+        function(error) {
+          console.error('Geolocation error:', error);
+          let errorMessage = 'Unable to get your location.';
+          
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage = 'Location permission denied. Please allow location access.';
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage = 'Location information unavailable.';
+              break;
+            case error.TIMEOUT:
+              errorMessage = 'Location request timed out.';
+              break;
+          }
+          
+          alert(errorMessage);
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000
+        }
+      );
+    } else {
+      alert('Geolocation is not supported by your browser.');
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+    }
+  });
+  // Reverse geocode using Nominatim
+  function reverseGeocode(lat, lng) {
+    const cityInput = document.getElementById('id_city');
+    const stateInput = document.getElementById('id_state');
+    
+    // Show loading state
+    cityInput.value = 'Loading...';
+    stateInput.value = 'Loading...';
+    
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=10`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.address) {
+          const city = data.address.city || data.address.town || data.address.village || data.address.county || '';
+          const state = data.address.state || data.address.province || '';
+          
+          cityInput.value = city;
+          stateInput.value = state;
+          
+          console.log('Reverse geocoded:', { city, state, fullAddress: data.address });
+        } else {
+          cityInput.value = '';
+          stateInput.value = '';
+          console.warn('No address data found for coordinates:', lat, lng);
+        }
+      })
+      .catch(error => {
+        console.error('Reverse geocoding error:', error);
+        cityInput.value = '';
+        stateInput.value = '';
+        // Show user-friendly error
+        cityInput.placeholder = 'City (manual entry)';
+        stateInput.placeholder = 'State (manual entry)';
+      });
+  }
+  // Phone OTP logic for Step 4
+  let otpSent = false;
+  let otpVerified = false;
+  let generatedOtp = null;
+  const sendOtpBtn = document.getElementById('send-otp-btn');
+  const otpInputGroup = document.getElementById('otp-input-group');
+  const verifyOtpBtn = document.getElementById('verify-otp-btn');
+  const otpSuccessMsg = document.getElementById('otp-success-msg');
+  const userId = '{{ user.id }}';
+  const phoneNumber = '{{ user.mobile_number }}';
+
+  // Function to show custom alert
+  function showCustomAlert(message, type = 'error') {
+    // Remove any existing alerts
+    const existingAlert = document.querySelector('.custom-alert');
+    if (existingAlert) {
+      existingAlert.remove();
+    }
+
+    const alert = document.createElement('div');
+    alert.className = `custom-alert alert alert-${type === 'error' ? 'danger' : 'success'} alert-dismissible fade show`;
+    alert.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+      min-width: 300px;
+      background: ${type === 'error' ? 'rgba(220,53,69,0.9)' : 'rgba(25,135,84,0.9)'};
+      color: white;
+      border: none;
+      border-radius: 10px;
+      backdrop-filter: blur(10px);
+    `;
+    
+    alert.innerHTML = `
+      <div class="d-flex align-items-center">
+        <i class="bi bi-${type === 'error' ? 'exclamation-triangle' : 'check-circle'}-fill me-2"></i>
+        <span>${message}</span>
+        <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="alert"></button>
+      </div>
+    `;
+    
+    document.body.appendChild(alert);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+      if (alert.parentNode) {
+        alert.remove();
+      }
+    }, 5000);
+  }
+
+  sendOtpBtn.addEventListener('click', function() {
+    if (!phoneNumber) {
+      showCustomAlert('Please add a phone number first.', 'error');
+      return;
+    }
+
+    sendOtpBtn.disabled = true;
+    sendOtpBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Sending...';
+    
+    otpSent = true;
+    otpInputGroup.style.display = '';
+    
+    // AJAX to backend to send OTP
+    fetch('/accounts/send_phone_otp/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+      },
+      body: `phone=${encodeURIComponent(phoneNumber)}&user_id=${encodeURIComponent(userId)}`
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        showCustomAlert('OTP sent successfully! Check your phone.', 'success');
+        document.getElementById('id_phone_otp').focus();
+      } else {
+        showCustomAlert('Failed to send OTP: ' + (data.error || 'Unknown error'), 'error');
+        otpSent = false;
+        otpInputGroup.style.display = 'none';
+      }
+    })
+    .catch(error => {
+      showCustomAlert('Network error. Please try again.', 'error');
+      otpSent = false;
+      otpInputGroup.style.display = 'none';
+    })
+    .finally(() => {
+      sendOtpBtn.disabled = false;
+      sendOtpBtn.innerHTML = 'Send OTP';
+    });
+  });
+
+  verifyOtpBtn.addEventListener('click', function() {
+    const enteredOtp = document.getElementById('id_phone_otp').value.trim();
+    
+    if (!enteredOtp) {
+      showCustomAlert('Please enter the OTP code.', 'error');
+      return;
+    }
+
+    if (enteredOtp.length !== 6) {
+      showCustomAlert('OTP must be 6 digits.', 'error');
+      return;
+    }
+
+    verifyOtpBtn.disabled = true;
+    verifyOtpBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Verifying...';
+    
+    // AJAX to backend to verify OTP
+    fetch('/accounts/verify_phone_otp/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+      },
+      body: `phone=${encodeURIComponent(phoneNumber)}&user_id=${encodeURIComponent(userId)}&otp=${encodeURIComponent(enteredOtp)}`
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        otpVerified = true;
+        otpInputGroup.style.display = 'none';
+        otpSuccessMsg.style.display = '';
+        showCustomAlert('Phone number verified successfully!', 'success');
+        showStep(currentStep);
+      } else {
+        showCustomAlert('Invalid or expired OTP. Please try again.', 'error');
+        document.getElementById('id_phone_otp').value = '';
+        document.getElementById('id_phone_otp').focus();
+      }
+    })
+    .catch(error => {
+      showCustomAlert('Network error. Please try again.', 'error');
+    })
+    .finally(() => {
+      verifyOtpBtn.disabled = false;
+      verifyOtpBtn.innerHTML = 'Verify OTP';
+    });
+  });
+
+  // Prevent form submission if OTP is not verified
+  document.getElementById('profile-setup-form').addEventListener('submit', function(e) {
+    if (currentStep === maxStep && !otpVerified) {
+      e.preventDefault();
+      showCustomAlert('Please verify your phone number with OTP before completing profile setup.', 'error');
+      return false;
+    }
+  });
+</script>
+{% endblock %} 

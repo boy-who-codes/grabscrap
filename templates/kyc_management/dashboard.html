@@ -1,0 +1,273 @@
+{% extends 'base.html' %}
+
+{% block title %}KYC Management Dashboard - KABAADWALA™{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active text-white" href="{% url 'kyc_management:dashboard' %}">
+                            <i class="fas fa-tachometer-alt me-2"></i>
+                            KYC Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{% url 'kyc_management:pending_list' %}">
+                            <i class="fas fa-clock me-2"></i>
+                            Pending Applications
+                            {% if total_pending > 0 %}
+                                <span class="badge bg-warning text-dark ms-2">{{ total_pending }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{% url 'admin_dashboard' %}">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Back to Admin Dashboard
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2 text-white">KYC Management Dashboard</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <div class="btn-group me-2">
+                        <a href="{% url 'kyc_management:pending_list' %}" class="btn btn-sm btn-outline-success">
+                            <i class="fas fa-eye me-1"></i> View Pending
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-warning shadow h-100 py-2" style="background: #121212; border-left: 4px solid #ffc107;">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                        Pending KYC
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-white">{{ total_pending }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-clock fa-2x text-warning"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-success shadow h-100 py-2" style="background: #121212; border-left: 4px solid #6BFF57;">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                        Approved KYC
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-white">{{ total_approved }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-check-circle fa-2x text-success"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-danger shadow h-100 py-2" style="background: #121212; border-left: 4px solid #dc3545;">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                        Rejected KYC
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-white">{{ total_rejected }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-times-circle fa-2x text-danger"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-info shadow h-100 py-2" style="background: #121212; border-left: 4px solid #17a2b8;">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                        Total Vendors
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-white">{{ total_pending|add:total_approved|add:total_rejected }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-users fa-2x text-info"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent KYC Approvals -->
+            <div class="card shadow mb-4" style="background: #121212; border: 1px solid #333;">
+                <div class="card-header py-3" style="background: #1a1a1a; border-bottom: 1px solid #333;">
+                    <h6 class="m-0 font-weight-bold text-white">
+                        <i class="fas fa-history me-2"></i>Recent KYC Approvals
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if recent_approvals %}
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Vendor</th>
+                                        <th>Store Name</th>
+                                        <th>Status</th>
+                                        <th>Reviewed By</th>
+                                        <th>Date</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for approval in recent_approvals %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if approval.vendor_profile.user.profile_photo %}
+                                                    <img src="{{ approval.vendor_profile.user.profile_photo.url }}" 
+                                                         class="rounded-circle me-2" width="32" height="32">
+                                                {% else %}
+                                                    <div class="bg-secondary rounded-circle me-2 d-flex align-items-center justify-content-center" 
+                                                         style="width: 32px; height: 32px;">
+                                                        <i class="fas fa-user text-white"></i>
+                                                    </div>
+                                                {% endif %}
+                                                <div>
+                                                    <div class="text-white">{{ approval.vendor_profile.user.full_name }}</div>
+                                                    <small class="text-muted">{{ approval.vendor_profile.user.email }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-white">{{ approval.vendor_profile.store_name }}</td>
+                                        <td>
+                                            {% if approval.status == 'approved' %}
+                                                <span class="badge bg-success">Approved</span>
+                                            {% elif approval.status == 'rejected' %}
+                                                <span class="badge bg-danger">Rejected</span>
+                                            {% else %}
+                                                <span class="badge bg-warning text-dark">Pending</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-white">{{ approval.admin_user.full_name }}</td>
+                                        <td class="text-white">{{ approval.reviewed_at|date:"M d, Y" }}</td>
+                                        <td>
+                                            <a href="{% url 'kyc_management:kyc_detail' approval.vendor_profile.id %}" 
+                                               class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No KYC approvals found.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="card shadow mb-4" style="background: #121212; border: 1px solid #333;">
+                        <div class="card-header py-3" style="background: #1a1a1a; border-bottom: 1px solid #333;">
+                            <h6 class="m-0 font-weight-bold text-white">
+                                <i class="fas fa-bolt me-2"></i>Quick Actions
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'kyc_management:pending_list' %}" class="btn btn-warning">
+                                    <i class="fas fa-clock me-2"></i>Review Pending Applications
+                                </a>
+                                <a href="{% url 'admin:kyc_management_kycapproval_changelist' %}" class="btn btn-info">
+                                    <i class="fas fa-cog me-2"></i>Manage All KYC Records
+                                </a>
+                                <a href="{% url 'admin:kyc_management_kycnotification_changelist' %}" class="btn btn-secondary">
+                                    <i class="fas fa-bell me-2"></i>View Notifications
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="card shadow mb-4" style="background: #121212; border: 1px solid #333;">
+                        <div class="card-header py-3" style="background: #1a1a1a; border-bottom: 1px solid #333;">
+                            <h6 class="m-0 font-weight-bold text-white">
+                                <i class="fas fa-chart-bar me-2"></i>KYC Statistics
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="kycChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Chart.js for statistics -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('kycChart').getContext('2d');
+    const kycChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Pending', 'Approved', 'Rejected'],
+            datasets: [{
+                data: [{{ total_pending }}, {{ total_approved }}, {{ total_rejected }}],
+                backgroundColor: [
+                    '#ffc107',
+                    '#6BFF57',
+                    '#dc3545'
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#ffffff'
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %} 

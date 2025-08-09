@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Checkout - Kabaadwala{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">Checkout</h2>
+            
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+            
+            <div class="row">
+                <!-- Order Summary -->
+                <div class="col-lg-5 order-lg-last mb-4">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Order Summary</h5>
+                        </div>
+                        <div class="card-body">
+                            {% for item in cart_items %}
+                                <div class="d-flex justify-content-between mb-2">
+                                    <div>{{ item.quantity }}x {{ item.product.title }}</div>
+                                    <div>₹{{ item.total_price|floatformat:2 }}</div>
+                                </div>
+                            {% endfor %}
+                            <hr>
+                            <div class="d-flex justify-content-between">
+                                <span>Subtotal:</span>
+                                <span>₹{{ cart.total_amount|floatformat:2 }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Shipping:</span>
+                                <span>{% if cart.shipping_cost > 0 %}₹{{ cart.shipping_cost|floatformat:2 }}{% else %}Free{% endif %}</span>
+                            </div>
+                            <div class="d-flex justify-content-between fw-bold">
+                                <span>Total:</span>
+                                <span>₹{{ cart.total_with_tax|floatformat:2 }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Checkout Form -->
+                <div class="col-lg-7">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Shipping & Payment</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" action="{% url 'orders:checkout' %}">
+                                {% csrf_token %}
+                                
+                                <h6>Shipping Address</h6>
+                                {% if addresses %}
+                                    {% for address in addresses %}
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="radio" 
+                                                   name="shipping_address" value="{{ address.id }}" required
+                                                   {% if forloop.first %}checked{% endif %}>
+                                            <label class="form-check-label">
+                                                {{ address.full_name }}, {{ address.address_line1 }}, 
+                                                {{ address.city }} - {{ address.postal_code }}
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+                                    <a href="{% url 'accounts:address_list' %}" class="btn btn-sm btn-outline-primary mt-2">
+                                        Manage Addresses
+                                    </a>
+                                {% else %}
+                                    <div class="alert alert-info">
+                                        Please add a shipping address to continue.
+                                    </div>
+                                    <a href="{% url 'accounts:add_address' %}?next={{ request.path }}" class="btn btn-primary">
+                                        Add Address
+                                    </a>
+                                {% endif %}
+                                
+                                <hr class="my-4">
+                                
+                                <h6>Payment Method</h6>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="payment_method" 
+                                           id="cod" value="cod" checked>
+                                    <label class="form-check-label" for="cod">
+                                        Cash on Delivery
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="payment_method" 
+                                           id="razorpay" value="razorpay">
+                                    <label class="form-check-label" for="razorpay">
+                                        Razorpay
+                                    </label>
+                                </div>
+                                
+                                {% if request.user.wallet_balance > 0 %}
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="payment_method" 
+                                               id="wallet" value="wallet"
+                                               {% if request.user.wallet_balance < cart.total_with_tax %}disabled{% endif %}>
+                                        <label class="form-check-label" for="wallet">
+                                            Wallet (₹{{ request.user.wallet_balance|floatformat:2 }})
+                                            {% if request.user.wallet_balance < cart.total_with_tax %}
+                                                <small class="text-danger"> - Insufficient balance</small>
+                                            {% endif %}
+                                        </label>
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="d-grid mt-4">
+                                    <button type="submit" class="btn btn-primary btn-lg">
+                                        Place Order - ₹{{ cart.total_with_tax|floatformat:2 }}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

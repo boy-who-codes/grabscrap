@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard - KABAADWALA™{% endblock %}
+{% block content %}
+<div class="dashboard-container d-flex" style="min-height: 90vh;">
+  <nav id="sidebar" class="sidebar d-flex flex-column flex-shrink-0 p-3" style="width: 250px; background: #18181C; color: #fff; transition: width 0.2s;">
+    <div class="d-flex align-items-center mb-4">
+      <span class="fs-4 fw-bold" style="color:#6BFF57;">KABAADWALA™</span>
+      <button id="sidebarCollapse" class="btn btn-sm ms-auto" style="background:none; color:#fff;"><i class="bi bi-list"></i></button>
+    </div>
+    <ul class="nav nav-pills flex-column mb-auto gap-2">
+      <li class="nav-item"><a href="{% url 'user_dashboard' %}" class="nav-link{% if request.path == '/user/dashboard/' or request.path == '/vendor/dashboard/' or request.path == '/admin/dashboard/' %} active{% endif %}"><i class="bi bi-house-door me-2"></i>Dashboard</a></li>
+      <li><a href="{% url 'profile_setup' %}" class="nav-link{% if request.path == '/accounts/profile-setup/' %} active{% endif %}"><i class="bi bi-person me-2"></i>Profile</a></li>
+      <li><a href="#" class="nav-link"><i class="bi bi-wallet2 me-2"></i>Wallet</a></li>
+      <li><a href="#" class="nav-link"><i class="bi bi-graph-up-arrow me-2"></i>Analytics</a></li>
+      <li><a href="#" class="nav-link"><i class="bi bi-gear me-2"></i>Settings</a></li>
+    </ul>
+    <hr>
+    <div class="mt-auto">
+      <a href="/accounts/logout/" class="btn btn-outline-light w-100"><i class="bi bi-box-arrow-right me-2"></i>Logout</a>
+    </div>
+  </nav>
+  <div class="flex-grow-1" style="background:#0B0B0F;">
+    <div class="topbar d-flex align-items-center justify-content-between px-4 py-3" style="background:#121212; border-bottom:1px solid #23232A;">
+      <div class="fs-5 fw-semibold" style="color:#6BFF57;">Welcome, {{ user.full_name|default:user.email }}</div>
+      <div class="d-flex align-items-center gap-3">
+        <span class="badge bg-success">{{ account_type|title }}</span>
+        <img src="{% if user.profile_photo %}{{ user.profile_photo.url }}{% else %}data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23C7C7C7'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E{% endif %}" alt="Profile" class="rounded-circle" width="36" height="36" style="object-fit:cover; background:#23232A;">
+      </div>
+    </div>
+    <div class="dashboard-content p-4">
+      {% block dashboard_content %}{% endblock %}
+    </div>
+  </div>
+</div>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+<style>
+  .sidebar {
+    min-height: 100vh;
+    border-right: 1px solid #23232A;
+    transition: width 0.2s;
+  }
+  .sidebar.collapsed {
+    width: 70px !important;
+  }
+  .sidebar.collapsed .nav-link span, .sidebar.collapsed .fs-4, .sidebar.collapsed .btn-outline-light, .sidebar.collapsed hr {
+    display: none !important;
+  }
+  .sidebar .nav-link {
+    color: #C7C7C7;
+    border-radius: 10px;
+    transition: background 0.15s, color 0.15s;
+    font-weight: 500;
+    font-size: 1.08rem;
+  }
+  .sidebar .nav-link.active, .sidebar .nav-link:hover {
+    background: #23232A;
+    color: #6BFF57;
+  }
+  .sidebar .bi {
+    font-size: 1.3rem;
+    vertical-align: -0.2em;
+  }
+  .dashboard-content {
+    min-height: 80vh;
+  }
+  @media (max-width: 768px) {
+    .sidebar { width: 70px !important; }
+    .sidebar .nav-link span, .sidebar .fs-4, .sidebar .btn-outline-light, .sidebar hr { display: none !important; }
+  }
+</style>
+<script>
+  document.getElementById('sidebarCollapse').addEventListener('click', function() {
+    document.getElementById('sidebar').classList.toggle('collapsed');
+  });
+</script>
+{% endblock %} 

@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KABAADWALA™ - System Flow & Architecture</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0B0B0F;
+            color: #FFFFFF;
+            line-height: 1.6;
+            overflow-x: auto;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px 0;
+            background: linear-gradient(135deg, #6BFF57 0%, #4CAF50 100%);
+            border-radius: 15px;
+            color: #0B0B0F;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .flow-section {
+            margin-bottom: 50px;
+            background: #121212;
+            border-radius: 15px;
+            padding: 30px;
+            border: 1px solid #2A2A2A;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            color: #6BFF57;
+            margin-bottom: 25px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .flow-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+            background: #1A1A1A;
+            border-radius: 12px;
+            border-left: 4px solid #6BFF57;
+            transition: all 0.3s ease;
+        }
+
+        .flow-step:hover {
+            transform: translateX(10px);
+            background: #2A2A2A;
+        }
+
+        .step-number {
+            background: #6BFF57;
+            color: #0B0B0F;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #6BFF57;
+            margin-bottom: 8px;
+        }
+
+        .step-description {
+            color: #C7C7C7;
+            font-size: 0.95rem;
+        }
+
+        .arrow {
+            color: #6BFF57;
+            font-size: 1.5rem;
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        .user-flow {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .user-type {
+            background: #1A1A1A;
+            border-radius: 12px;
+            padding: 25px;
+            border: 2px solid #2A2A2A;
+            transition: all 0.3s ease;
+        }
+
+        .user-type:hover {
+            border-color: #6BFF57;
+            transform: translateY(-5px);
+        }
+
+        .user-type h3 {
+            color: #6BFF57;
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .user-flow-list {
+            list-style: none;
+        }
+
+        .user-flow-list li {
+            padding: 8px 0;
+            color: #C7C7C7;
+            position: relative;
+            padding-left: 25px;
+        }
+
+        .user-flow-list li::before {
+            content: "→";
+            color: #6BFF57;
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+
+        .architecture-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .arch-component {
+            background: #1A1A1A;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid #2A2A2A;
+            transition: all 0.3s ease;
+        }
+
+        .arch-component:hover {
+            border-color: #6BFF57;
+            transform: scale(1.05);
+        }
+
+        .arch-icon {
+            font-size: 2rem;
+            color: #6BFF57;
+            margin-bottom: 15px;
+        }
+
+        .arch-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #FFFFFF;
+            margin-bottom: 10px;
+        }
+
+        .arch-description {
+            color: #C7C7C7;
+            font-size: 0.9rem;
+        }
+
+        .data-flow {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        .data-step {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: #1A1A1A;
+            border-radius: 8px;
+            border-left: 3px solid #6BFF57;
+        }
+
+        .data-icon {
+            color: #6BFF57;
+            font-size: 1.2rem;
+            width: 30px;
+            text-align: center;
+        }
+
+        .data-content {
+            flex: 1;
+        }
+
+        .data-title {
+            font-weight: 600;
+            color: #FFFFFF;
+            margin-bottom: 5px;
+        }
+
+        .data-desc {
+            color: #C7C7C7;
+            font-size: 0.9rem;
+        }
+
+        .tech-stack {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        .tech-item {
+            background: #1A1A1A;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #2A2A2A;
+        }
+
+        .tech-name {
+            color: #6BFF57;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .tech-purpose {
+            color: #C7C7C7;
+            font-size: 0.85rem;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-complete {
+            background: #6BFF57;
+        }
+
+        .status-pending {
+            background: #FFA500;
+        }
+
+        .status-future {
+            background: #FF6B6B;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin: 20px 0;
+        }
+
+        .feature-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid #2A2A2A;
+            display: flex;
+            align-items: center;
+        }
+
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+
+        .feature-name {
+            flex: 1;
+            color: #FFFFFF;
+            font-weight: 500;
+        }
+
+        .feature-status {
+            color: #C7C7C7;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .flow-step {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .user-flow {
+                grid-template-columns: 1fr;
+            }
+            
+            .architecture-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>KABAADWALA™</h1>
+            <p>Hyperlocal Multi-Vendor Scrap Marketplace - System Flow & Architecture</p>
+        </div>
+
+        <!-- User Registration Flow -->
+        <div class="flow-section">
+            <h2 class="section-title">User Registration & Authentication Flow</h2>
+            <div class="flow-diagram">
+                <div class="flow-step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <div class="step-title">User Signup</div>
+                        <div class="step-description">User selects account type (Buyer/Vendor), provides email, password, and store name (for vendors)</div>
+                    </div>
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <div class="step-title">Email Verification</div>
+                        <div class="step-description">Celery sends verification email with activation link, fallback to Django console backend</div>
+                    </div>
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <div class="step-title">Login with 2FA</div>
+                        <div class="step-description">User logs in with email/password, receives OTP via email for 2FA verification</div>
+                    </div>
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <div class="step-title">Profile Setup Wizard</div>
+                        <div class="step-description">Multi-step form: Basic details → Phone verification → Store details → KYC documents (vendors only)</div>
+                    </div>
+                </div>
+                <div class="arrow">↓</div>
+                <div class="flow-step">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <div class="step-title">Dashboard Access</div>
+                        <div class="step-description">User redirected to appropriate dashboard based on account type and profile completion status</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Types & Flows -->
+        <div class="flow-section">
+            <h2 class="section-title">User Types & Feature Flows</h2>
+            <div class="user-flow">
+                <div class="user-type">
+                    <h3>👤 Buyer</h3>
+                    <ul class="user-flow-list">
+                        <li>Browse scrap listings</li>
+                        <li>Search by location & category</li>
+                        <li>Place bids on items</li>
+                        <li>Chat with vendors</li>
+                        <li>Track order status</li>
+                        <li>Rate & review vendors</li>
+                        <li>Manage wallet & payments</li>
+                        <li>View transaction history</li>
+                    </ul>
+                </div>
+                <div class="user-type">
+                    <h3>🏪 Vendor</h3>
+                    <ul class="user-flow-list">
+                        <li>Complete KYC verification</li>
+                        <li>Add scrap inventory</li>
+                        <li>Set pricing & descriptions</li>
+                        <li>Manage store profile</li>
+                        <li>Respond to buyer inquiries</li>
+                        <li>Process orders & payments</li>
+                        <li>Track sales analytics</li>
+                        <li>Withdraw earnings</li>
+                    </ul>
+                </div>
+                <div class="user-type">
+                    <h3>⚙️ Admin</h3>
+                    <ul class="user-flow-list">
+                        <li>KYC approval/rejection</li>
+                        <li>Monitor system performance</li>
+                        <li>Manage user accounts</li>
+                        <li>View transaction logs</li>
+                        <li>Generate reports</li>
+                        <li>System configuration</li>
+                        <li>Dispute resolution</li>
+                        <li>Content moderation</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Architecture -->
+        <div class="flow-section">
+            <h2 class="section-title">System Architecture</h2>
+            <div class="architecture-grid">
+                <div class="arch-component">
+                    <div class="arch-icon">🐍</div>
+                    <div class="arch-title">Django 5.0+</div>
+                    <div class="arch-description">ASGI-ready backend framework with modular app structure</div>
+                </div>
+                <div class="arch-component">
+                    <div class="arch-icon">🎨</div>
+                    <div class="arch-title">Bootstrap 5</div>
+                    <div class="arch-description">Apple-like UI components with custom dark theme</div>
+                </div>
+                <div class="arch-component">
+                    <div class="arch-icon">⚡</div>
+                    <div class="arch-title">Celery + Redis</div>
+                    <div class="arch-description">Async task processing with fallback to sync operations</div>
+                </div>
+                <div class="arch-component">
+                    <div class="arch-icon">🗄️</div>
+                    <div class="arch-title">PostgreSQL</div>
+                    <div class="arch-description">Production database with SQLite for development</div>
+                </div>
+                <div class="arch-component">
+                    <div class="arch-icon">🌐</div>
+                    <div class="arch-title">Django Channels</div>
+                    <div class="arch-description">WebSocket support for real-time features</div>
+                </div>
+                <div class="arch-component">
+                    <div class="arch-icon">🗺️</div>
+                    <div class="arch-title">MapLibre GL JS</div>
+                    <div class="arch-description">Open-source mapping for location services</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Flow -->
+        <div class="flow-section">
+            <h2 class="section-title">Data Flow & Processing</h2>
+            <div class="data-flow">
+                <div class="data-step">
+                    <div class="data-icon">📝</div>
+                    <div class="data-content">
+                        <div class="data-title">User Input</div>
+                        <div class="data-desc">Forms, file uploads, location data, and user interactions</div>
+                    </div>
+                </div>
+                <div class="data-step">
+                    <div class="data-icon">🔒</div>
+                    <div class="data-content">
+                        <div class="data-title">Validation & Security</div>
+                        <div class="data-desc">Form validation, CSRF protection, file type checking, and sanitization</div>
+                    </div>
+                </div>
+                <div class="data-step">
+                    <div class="data-icon">⚡</div>
+                    <div class="data-content">
+                        <div class="data-title">Async Processing</div>
+                        <div class="data-desc">Email sending, SMS delivery, image compression, and background tasks</div>
+                    </div>
+                </div>
+                <div class="data-step">
+                    <div class="data-icon">💾</div>
+                    <div class="data-content">
+                        <div class="data-title">Database Storage</div>
+                        <div class="data-desc">User profiles, KYC data, transactions, and application state</div>
+                    </div>
+                </div>
+                <div class="data-step">
+                    <div class="data-icon">📊</div>
+                    <div class="data-content">
+                        <div class="data-title">Analytics & Reporting</div>
+                        <div class="data-desc">Dashboard metrics, KYC statistics, and business intelligence</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Technology Stack -->
+        <div class="flow-section">
+            <h2 class="section-title">Technology Stack</h2>
+            <div class="tech-stack">
+                <div class="tech-item">
+                    <div class="tech-name">Django 5.0+</div>
+                    <div class="tech-purpose">Backend framework</div>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-name">Bootstrap 5</div>
+                    <div class="tech-purpose">Frontend UI framework</div>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-name">Celery</div>
+                    <div class="tech-purpose">Async task processing</div>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-name">Redis</div>
+                    <div class="tech-purpose">Message broker & cache</div>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-name">PostgreSQL</div>
+                    <div class="tech-purpose">Production database</div>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-name">MapLibre GL JS</div>
+                    <div class="tech-purpose">Mapping & geolocation</div>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-name">django-environ</div>
+                    <div class="tech-purpose">Environment management</div>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-name">bcrypt</div>
+                    <div class="tech-purpose">Password hashing</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feature Status -->
+        <div class="flow-section">
+            <h2 class="section-title">Feature Implementation Status</h2>
+            <ul class="feature-list">
+                <li>
+                    <span class="feature-name">User Authentication & Registration</span>
+                    <span class="feature-status"><span class="status-indicator status-complete"></span>Complete</span>
+                </li>
+                <li>
+                    <span class="feature-name">Email Verification & 2FA</span>
+                    <span class="feature-status"><span class="status-indicator status-complete"></span>Complete</span>
+                </li>
+                <li>
+                    <span class="feature-name">Multi-step Profile Setup</span>
+                    <span class="feature-status"><span class="status-indicator status-complete"></span>Complete</span>
+                </li>
+                <li>
+                    <span class="feature-name">Phone OTP Verification</span>
+                    <span class="feature-status"><span class="status-indicator status-complete"></span>Complete</span>
+                </li>
+                <li>
+                    <span class="feature-name">KYC Document Upload</span>
+                    <span class="feature-status"><span class="status-indicator status-complete"></span>Complete</span>
+                </li>
+                <li>
+                    <span class="feature-name">Admin KYC Approval System</span>
+                    <span class="feature-status"><span class="status-indicator status-complete"></span>Complete</span>
+                </li>
+                <li>
+                    <span class="feature-name">User Dashboards</span>
+                    <span class="feature-status"><span class="status-indicator status-complete"></span>Complete</span>
+                </li>
+                <li>
+                    <span class="feature-name">Product Management</span>
+                    <span class="feature-status"><span class="status-indicator status-pending"></span>Pending</span>
+                </li>
+                <li>
+                    <span class="feature-name">Order & Bidding System</span>
+                    <span class="feature-status"><span class="status-indicator status-future"></span>Future</span>
+                </li>
+                <li>
+                    <span class="feature-name">Real-time Chat</span>
+                    <span class="feature-status"><span class="status-indicator status-future"></span>Future</span>
+                </li>
+                <li>
+                    <span class="feature-name">Payment Integration</span>
+                    <span class="feature-status"><span class="status-indicator status-future"></span>Future</span>
+                </li>
+                <li>
+                    <span class="feature-name">Analytics & Reporting</span>
+                    <span class="feature-status"><span class="status-indicator status-future"></span>Future</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Development Commands -->
+        <div class="flow-section">
+            <h2 class="section-title">Development Commands</h2>
+            <div class="data-flow">
+                <div class="data-step">
+                    <div class="data-icon">🐍</div>
+                    <div class="data-content">
+                        <div class="data-title">Environment Setup</div>
+                        <div class="data-desc">python -m venv env && env\Scripts\activate && pip install -r requirements.txt</div>
+                    </div>
+                </div>
+                <div class="data-step">
+                    <div class="data-icon">🗄️</div>
+                    <div class="data-content">
+                        <div class="data-title">Database</div>
+                        <div class="data-desc">python manage.py makemigrations && python manage.py migrate</div>
+                    </div>
+                </div>
+                <div class="data-step">
+                    <div class="data-icon">⚡</div>
+                    <div class="data-content">
+                        <div class="data-title">Redis & Celery</div>
+                        <div class="data-desc">redis-server (WSL) && celery -A core worker --loglevel=info</div>
+                    </div>
+                </div>
+                <div class="data-step">
+                    <div class="data-icon">🚀</div>
+                    <div class="data-content">
+                        <div class="data-title">Development Server</div>
+                        <div class="data-desc">python manage.py runserver</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Phone Verification | KABAADWALA™{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card p-4" style="background:#121212;">
+                <h2 class="mb-4 text-center" style="color:#6BFF57;">Verify Your Phone</h2>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="otp" class="form-label">OTP</label>
+                        <input type="tel" class="form-control" name="otp" id="otp" maxlength="6" required inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code">
+                    </div>
+                    <button type="submit" class="btn btn-success w-100" style="background:#6BFF57;color:#0B0B0F;">Verify</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,125 @@
+{
+  "project": "KABAADWALA™ Scrap Marketplace",
+  "stack": {
+    "backend": "Django 5.0+ (ASGI-ready)",
+    "frontend": "Django Templates + Bootstrap 5 (CDN)",
+    "async": "Celery + Redis + ASGI + Channels (future-proof)",
+    "env": "Python virtualenv ('env')",
+    "db_dev": "SQLite",
+    "db_prod": "PostgreSQL",
+    "email_dev": "Console backend",
+    "email_prod": "SMTP / 3rd-party services via .env"
+  },
+  "architecture": {
+    "modular_apps": true,
+    "asgi_enabled": true,
+    "celery_fallback": "Wrap all .delay() with try/except fallback to sync",
+    "env_config": "Use .env for all secrets, API keys, and sensitive data",
+    "doc_folder": "Serve interactive docs at /docs/{feature}.html using custom template"
+  },
+  "rules": [
+    {
+      "title": "UI & UX",
+      "rules": [
+        "Use Bootstrap 5 (CDN). No Tailwind or extra UI frameworks.",
+        {
+          "color_palette": {
+            "Primary Green": "#6BFF57",
+            "Background": "#0B0B0F",
+            "Card": "#121212",
+            "Text (light)": "#FFFFFF",
+            "Text (muted)": "#C7C7C7"
+          }
+        },
+        "All templates must extend `base.html` and follow mobile-first responsive design",
+        "Use Apple-like clean layout: navbar, footer, card components, modals, and UI feedback",
+        "All documentation pages (`/docs/feature.html`) must follow this color palette and layout"
+      ]
+    },
+    {
+      "title": "Django App Development",
+      "rules": [
+        "Use `python -m venv env` for local environment setup",
+        "Install all packages via pip and log usage in `readme.txt`",
+        "Develop one Django app at a time — complete feature flow before starting next",
+        "Each feature must include: models, forms, views, templates, admin, URLs, and /docs/{feature}.html",
+        "Follow clean imports, typing, and Django 5+ best practices"
+      ]
+    },
+    {
+      "title": "ASGI & Async Support",
+      "rules": [
+        "Enable async using `asgi.py` in the core project",
+        "Structure `asgi.py` to handle HTTP and WebSocket layers",
+        "Prepare for future real-time use cases (e.g., bidding, chat, live orders) using Django Channels",
+        "Write all views with async/await where applicable",
+        "Integrate Redis + Channels layers using Django middleware if required"
+      ]
+    },
+    {
+      "title": "Celery + Redis",
+      "rules": [
+        "Use Redis as Celery broker and result backend",
+        "Define Celery config in `core/celery.py`, initiate in `__init__.py`",
+        "Use `@app.task` or `@shared_task` decorators for async tasks",
+        "Wrap `.delay()` with try/except and fallback to sync call",
+        "Use Celery for: email, image compression, KYC, notifications, logging"
+      ]
+    },
+    {
+      "title": "Email, SMS, API Keys",
+      "rules": [
+        "Use Django’s console backend in development",
+        "Use SMTP or services like MSG91 / SendGrid / AWS SES in production",
+        "Never hardcode credentials; use `.env` and read via `os.environ.get()` or `decouple`",
+        "Create `example.env` (do not track secrets in Git)",
+        "Add relevant keys and usage in `readme.txt`"
+      ]
+    },
+    {
+      "title": "Security & Environment Handling",
+      "rules": [
+        "Use `python-decouple` or `django-environ` to manage all secrets",
+        "Add `.env`, `/env/`, `*.sqlite3`, `__pycache__/`, `.vscode`, `*.log` to `.gitignore`",
+        "Separate dev and prod environment configs cleanly",
+        "Log errors without leaking any secret information"
+      ]
+    },
+    {
+      "title": "Production Deployment",
+      "rules": [
+        "Use PostgreSQL for production DB",
+        "Serve static files using WhiteNoise",
+        "Use `gunicorn` (3-4 workers) behind `Nginx`",
+        "Enable logging, GZip, security headers, and request throttling",
+        "Use pagination for all listing views"
+      ]
+    },
+    {
+      "title": "Feature Development Flow",
+      "rules": [
+        "Follow flow: `models` → `forms` → `views` → `templates` → `urls` → `docs`",
+        "For every feature, generate `/docs/{feature}.html` using a standard template that explains data flow, files, and tasks",
+        "Do not mark any feature complete until UI + Docs are live",
+        "Templates must have form validation, `messages` framework, and full responsiveness"
+      ]
+    },
+    {
+      "title": "Logging & Fallbacks",
+      "rules": [
+        "Use Django logging config in `settings.py`",
+        "Log all Celery failures, API exceptions, and Redis outages",
+        "If Redis/Celery fails, fallback to sync function and notify via UI or logs"
+      ]
+    },
+    {
+      "title": "Readme & Dependency Tracking",
+      "rules": [
+        "Each `pip` package must be listed in `readme.txt` with purpose",
+        "Log Redis, PostgreSQL, and SMS/Email providers as project dependencies",
+        "Add commands for: migrations, running celery, Redis server, async workers, and asgi/gunicorn deployment"
+      ]
+    }
+  ]
+}
+

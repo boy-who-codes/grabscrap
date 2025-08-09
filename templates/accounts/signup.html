@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% block title %}Sign Up | KABAADWALA™{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card p-4" style="background:#121212;">
+                <h2 class="mb-4 text-center" style="color:#6BFF57;">Create Account</h2>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Sign up as</label>
+                        <div class="d-flex gap-3 justify-content-center">
+                            <input type="radio" class="btn-check" name="user_type" id="buyer" value="buyer" autocomplete="off" checked>
+                            <label class="select-card" for="buyer">
+                                <div class="card shadow-sm text-center py-3 px-4 mb-0 select-card-inner" id="buyerCard">
+                                    <i class="bi bi-bag" style="font-size:2rem;"></i>
+                                    <div class="fw-bold mt-2">Buyer</div>
+                                    <div class="small text-muted">Want to buy</div>
+                                </div>
+                            </label>
+                            <input type="radio" class="btn-check" name="user_type" id="vendor" value="vendor" autocomplete="off">
+                            <label class="select-card" for="vendor">
+                                <div class="card shadow-sm text-center py-3 px-4 mb-0 select-card-inner" id="vendorCard">
+                                    <i class="bi bi-shop" style="font-size:2rem;"></i>
+                                    <div class="fw-bold mt-2">Vendor</div>
+                                    <div class="small text-muted">Want to sell</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-3" id="storeNameField" style="display:none;">
+                        <label for="store_name" class="form-label">Store Name</label>
+                        <input type="text" class="form-control" name="store_name" id="store_name">
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" name="email" id="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="full_name" class="form-label">Full Name</label>
+                        <input type="text" class="form-control" name="full_name" id="full_name">
+                    </div>
+                    <div class="mb-3">
+                        <label for="password1" class="form-label">Password</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" name="password1" id="password1" required>
+                            <button type="button" class="btn btn-outline-secondary password-toggle" data-target="#password1" tabindex="-1" style="border-top-left-radius:0;border-bottom-left-radius:0;"><i class="bi bi-eye"></i></button>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password2" class="form-label">Confirm Password</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" name="password2" id="password2" required>
+                            <button type="button" class="btn btn-outline-secondary password-toggle" data-target="#password2" tabindex="-1" style="border-top-left-radius:0;border-bottom-left-radius:0;"><i class="bi bi-eye"></i></button>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100" style="background:#6BFF57;color:#0B0B0F;">Sign Up</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+<style>
+.select-card-inner {
+    background: #18181C;
+    border: 2px solid #23232A;
+    border-radius: 16px;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+    min-width: 120px;
+    color: #C7C7C7;
+}
+.btn-check:checked + .select-card .select-card-inner,
+.select-card-inner.active {
+    border-color: #6BFF57 !important;
+    background: #23232A !important;
+    color: #6BFF57 !important;
+    box-shadow: 0 0 0 2px #6BFF5733;
+}
+.select-card-inner .bi {
+    color: #6BFF57;
+}
+</style>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(function() {
+    function updateCards() {
+        if ($('#vendor').is(':checked')) {
+            $('#storeNameField').show();
+            $('#vendorCard').addClass('active');
+            $('#buyerCard').removeClass('active');
+        } else {
+            $('#storeNameField').hide();
+            $('#buyerCard').addClass('active');
+            $('#vendorCard').removeClass('active');
+        }
+    }
+    $('input[name="user_type"]').change(updateCards);
+    updateCards();
+
+    // Password visibility toggle
+    $('.password-toggle').on('click', function() {
+        var target = $($(this).data('target'));
+        var icon = $(this).find('i');
+        if (target.attr('type') === 'password') {
+            target.attr('type', 'text');
+            icon.removeClass('bi-eye').addClass('bi-eye-slash');
+        } else {
+            target.attr('type', 'password');
+            icon.removeClass('bi-eye-slash').addClass('bi-eye');
+        }
+    });
+});
+</script>
+{% endblock %} 

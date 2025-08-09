@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+
+{% block title %}Shopping Cart - KABAADWALA™{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card" style="background:#121212; border:1px solid #333;">
+                <div class="card-header" style="background:#0B0B0F; border-bottom:1px solid #333;">
+                    <h4 class="mb-0" style="color:#6BFF57;">
+                        <i class="bi bi-cart3"></i> Shopping Cart
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if cart_items %}
+                        <!-- Cart Items -->
+                        <div class="table-responsive">
+                            <table class="table table-dark">
+                                <thead style="background:#0B0B0F;">
+                                    <tr>
+                                        <th style="color:#6BFF57;">Product</th>
+                                        <th style="color:#6BFF57;">Price</th>
+                                        <th style="color:#6BFF57;">Quantity</th>
+                                        <th style="color:#6BFF57;">Total</th>
+                                        <th style="color:#6BFF57;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in cart_items %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if item.product.images.first %}
+                                                    <img src="{{ item.product.images.first.image.url }}" 
+                                                         alt="{{ item.product.title }}" 
+                                                         class="me-3" style="width:60px; height:60px; object-fit:cover;">
+                                                {% else %}
+                                                    <div class="me-3 d-flex align-items-center justify-content-center" 
+                                                         style="width:60px; height:60px; background:#0B0B0F;">
+                                                        <i class="bi bi-image text-secondary"></i>
+                                                    </div>
+                                                {% endif %}
+                                                <div>
+                                                    <h6 style="color:#FFFFFF;">{{ item.product.title }}</h6>
+                                                    <small class="text-muted">
+                                                        <i class="bi bi-shop"></i> {{ item.product.vendor.store_name }}
+                                                    </small>
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        SKU: {{ item.product.sku }}
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td style="color:#6BFF57;">₹{{ item.product.price }}</td>
+                                        <td>
+                                            <form method="post" action="{% url 'orders:update_cart_item' item.id %}" 
+                                                  class="d-flex align-items-center" style="max-width:120px;">
+                                                {% csrf_token %}
+                                                <input type="number" name="quantity" value="{{ item.quantity }}" 
+                                                       min="{{ item.product.minimum_order_quantity }}" 
+                                                       max="{{ item.product.stock_quantity }}"
+                                                       class="form-control form-control-sm me-2"
+                                                       style="background:#0B0B0F; border:1px solid #333; color:#FFFFFF;">
+                                                <button type="submit" class="btn btn-outline-success btn-sm">
+                                                    <i class="bi bi-arrow-clockwise"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                        <td style="color:#6BFF57;">₹{{ item.total_price }}</td>
+                                        <td>
+                                            <form method="post" action="{% url 'orders:remove_from_cart' item.id %}" 
+                                                  style="display:inline;">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-outline-danger btn-sm" 
+                                                        onclick="return confirm('Remove this item from cart?')">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Cart Summary -->
+                        <div class="row mt-4">
+                            <div class="col-md-8">
+                                <div class="card" style="background:#0B0B0F; border:1px solid #333;">
+                                    <div class="card-body">
+                                        <h6 style="color:#6BFF57;">Cart Summary</h6>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span style="color:#C7C7C7;">Items ({{ cart.total_items }}):</span>
+                                            <span style="color:#FFFFFF;">₹{{ cart.total_amount }}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span style="color:#C7C7C7;">Estimated Tax:</span>
+                                            <span style="color:#FFFFFF;">₹{{ cart.total_amount|multiply:0.18|floatformat:2 }}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span style="color:#C7C7C7;">Shipping:</span>
+                                            <span style="color:#FFFFFF;">₹50.00</span>
+                                        </div>
+                                        <hr style="border-color:#333;">
+                                        <div class="d-flex justify-content-between">
+                                            <strong style="color:#6BFF57;">Total:</strong>
+                                            <strong style="color:#6BFF57;">₹{{ cart.total_amount|add:cart.total_amount|multiply:0.18|add:50|floatformat:2 }}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-grid gap-2">
+                                    <a href="{% url 'orders:checkout' %}" class="btn btn-success btn-lg">
+                                        <i class="bi bi-credit-card"></i> Proceed to Checkout
+                                    </a>
+                                    <a href="{% url 'products:product_list' %}" class="btn btn-outline-success">
+                                        <i class="bi bi-arrow-left"></i> Continue Shopping
+                                    </a>
+                                    <button class="btn btn-outline-danger" onclick="clearCart()">
+                                        <i class="bi bi-trash"></i> Clear Cart
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Vendor Grouping -->
+                        <div class="mt-4">
+                            <h6 style="color:#6BFF57;">Orders by Vendor</h6>
+                            {% regroup cart_items by product.vendor as vendor_list %}
+                            {% for vendor in vendor_list %}
+                            <div class="card mb-3" style="background:#0B0B0F; border:1px solid #333;">
+                                <div class="card-header" style="border-bottom:1px solid #333;">
+                                    <div class="d-flex align-items-center">
+                                        {% if vendor.grouper.store_logo %}
+                                            <img src="{{ vendor.grouper.store_logo.url }}" 
+                                                 alt="{{ vendor.grouper.store_name }}" 
+                                                 class="me-2" style="width:30px; height:30px; border-radius:50%;">
+                                        {% else %}
+                                            <i class="bi bi-shop me-2" style="color:#6BFF57;"></i>
+                                        {% endif %}
+                                        <h6 class="mb-0" style="color:#FFFFFF;">{{ vendor.grouper.store_name }}</h6>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        {% for item in vendor.list %}
+                                        <div class="col-md-6 mb-2">
+                                            <div class="d-flex align-items-center">
+                                                {% if item.product.images.first %}
+                                                    <img src="{{ item.product.images.first.image.url }}" 
+                                                         alt="{{ item.product.title }}" 
+                                                         class="me-2" style="width:40px; height:40px; object-fit:cover;">
+                                                {% endif %}
+                                                <div class="flex-grow-1">
+                                                    <small style="color:#FFFFFF;">{{ item.product.title }}</small>
+                                                    <br>
+                                                    <small class="text-secondary">{{ item.quantity }} x ₹{{ item.product.price }}</small>
+                                                </div>
+                                                <small style="color:#6BFF57;">₹{{ item.total_price }}</small>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                    {% else %}
+                        <!-- Empty Cart -->
+                        <div class="text-center py-5">
+                            <i class="bi bi-cart3" style="font-size:4rem; color:#333;"></i>
+                            <h4 class="mt-3" style="color:#FFFFFF;">Your cart is empty</h4>
+                            <p class="text-secondary">Add some products to your cart to get started!</p>
+                            <a href="{% url 'products:product_list' %}" class="btn btn-success">
+                                <i class="bi bi-arrow-right"></i> Browse Products
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Clear Cart Modal -->
+<div class="modal fade" id="clearCartModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content" style="background:#121212; border:1px solid #333;">
+            <div class="modal-header" style="border-bottom:1px solid #333;">
+                <h5 class="modal-title" style="color:#6BFF57;">Clear Cart</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p style="color:#C7C7C7;">Are you sure you want to remove all items from your cart?</p>
+            </div>
+            <div class="modal-footer" style="border-top:1px solid #333;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" action="{% url 'orders:clear_cart' %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Clear Cart</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function clearCart() {
+    $('#clearCartModal').modal('show');
+}
+
+// Auto-update quantity on change
+$('input[name="quantity"]').change(function() {
+    $(this).closest('form').submit();
+});
+
+// Confirm before removing items
+$('form[action*="remove_from_cart"]').submit(function(e) {
+    if (!confirm('Remove this item from cart?')) {
+        e.preventDefault();
+    }
+});
+</script>
+{% endblock %} 

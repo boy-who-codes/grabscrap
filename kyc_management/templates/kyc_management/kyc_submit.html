@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Submit KYC - KABAADWALA™{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card" style="background:#121212; border:1px solid #333;">
+                <div class="card-header" style="background:#0B0B0F; border-bottom:1px solid #333;">
+                    <h4 class="mb-0" style="color:#6BFF57;">
+                        <i class="bi bi-shield-check"></i> Submit KYC Documents
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post" enctype="multipart/form-data" id="kycForm">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <h5 class="mb-3" style="color:#6BFF57;">Identity Documents</h5>
+                            
+                            <!-- PAN Card -->
+                            <div class="mb-3">
+                                <label for="id_pan_document" class="form-label" style="color:#fff;">
+                                    PAN Card <span class="text-danger">*</span>
+                                </label>
+                                {{ form.pan_document }}
+                                <div class="form-text" style="color:#888;">
+                                    Upload a clear scan of your PAN card (PDF, JPG, PNG)
+                                </div>
+                                {% if form.pan_document.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.pan_document.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- GSTIN Certificate -->
+                            <div class="mb-3">
+                                <label for="id_gstin_document" class="form-label" style="color:#fff;">
+                                    GSTIN Certificate <span class="text-danger">*</span>
+                                </label>
+                                {{ form.gstin_document }}
+                                <div class="form-text" style="color:#888;">
+                                    Upload your GSTIN certificate (PDF, JPG, PNG)
+                                </div>
+                                {% if form.gstin_document.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.gstin_document.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <h5 class="mb-3" style="color:#6BFF57;">Bank Account Details</h5>
+                            
+                            <!-- Bank Account Proof -->
+                            <div class="mb-3">
+                                <label for="id_bank_account_proof" class="form-label" style="color:#fff;">
+                                    Bank Account Proof <span class="text-danger">*</span>
+                                </label>
+                                {{ form.bank_account_proof }}
+                                <div class="form-text" style="color:#888;">
+                                    Upload a cancelled cheque or bank statement (PDF, JPG, PNG)
+                                </div>
+                                {% if form.bank_account_proof.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.bank_account_proof.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Bank Account Number -->
+                            <div class="mb-3">
+                                <label for="id_bank_account_number" class="form-label" style="color:#fff;">
+                                    Account Number <span class="text-danger">*</span>
+                                </label>
+                                {{ form.bank_account_number }}
+                                {% if form.bank_account_number.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.bank_account_number.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Bank IFSC -->
+                            <div class="mb-3">
+                                <label for="id_bank_ifsc" class="form-label" style="color:#fff;">
+                                    IFSC Code <span class="text-danger">*</span>
+                                </label>
+                                {{ form.bank_ifsc }}
+                                {% if form.bank_ifsc.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.bank_ifsc.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Account Holder Name -->
+                            <div class="mb-3">
+                                <label for="id_bank_account_holder" class="form-label" style="color:#fff;">
+                                    Account Holder Name <span class="text-danger">*</span>
+                                </label>
+                                {{ form.bank_account_holder }}
+                                <div class="form-text" style="color:#888;">
+                                    Name as per bank records
+                                </div>
+                                {% if form.bank_account_holder.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.bank_account_holder.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-send-check"></i> Submit for Verification
+                            </button>
+                            <a href="{% url 'vendor_dashboard' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to Dashboard
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add custom CSS for file inputs -->
+<style>
+    .form-control, .form-select, .form-control-file {
+        background-color: #1e1e1e !important;
+        border: 1px solid #333 !important;
+        color: #fff !important;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #6BFF57 !important;
+        box-shadow: 0 0 0 0.2rem rgba(107, 255, 87, 0.25) !important;
+    }
+    .form-text {
+        color: #6c757d !important;
+    }
+    input[type="file"]::file-selector-button {
+        background-color: #2d2d2d;
+        color: #fff;
+        border: 1px solid #444;
+        padding: 6px 12px;
+        margin-right: 10px;
+        border-radius: 4px;
+    }
+    input[type="file"]::file-selector-button:hover {
+        background-color: #3d3d3d;
+    }
+</style>
+
+<script>
+    // Add file input styling and preview
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileInputs = document.querySelectorAll('input[type="file"]');
+        fileInputs.forEach(input => {
+            input.classList.add('form-control');
+            
+            // Add file name display
+            input.addEventListener('change', function(e) {
+                const fileName = this.files[0]?.name || 'No file chosen';
+                const label = this.previousElementSibling;
+                const fileNameDisplay = document.createElement('div');
+                fileNameDisplay.className = 'mt-1 small text-muted';
+                fileNameDisplay.textContent = `Selected: ${fileName}`;
+                
+                // Remove existing file name display if any
+                const existingDisplay = this.nextElementSibling;
+                if (existingDisplay && existingDisplay.className.includes('mt-1')) {
+                    existingDisplay.remove();
+                }
+                
+                this.after(fileNameDisplay);
+            });
+        });
+    });
+</script>
+{% endblock %}

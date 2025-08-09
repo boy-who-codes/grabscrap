@@ -1,0 +1,408 @@
+{% extends 'base.html' %}
+{% block title %}Account System Documentation - KABAADWALA™{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <div class="row">
+    <div class="col-lg-8 mx-auto">
+      <div class="card shadow-lg" style="background: #121212; color: #fff; border-radius: 20px;">
+        <div class="card-body p-5">
+          <h1 class="text-center mb-4" style="color: #6BFF57;">Account System Documentation</h1>
+          <p class="text-center mb-5" style="color: #C7C7C7;">Complete authentication, profile management, and KYC system for KABAADWALA™</p>
+
+          <!-- Status Badge -->
+          <div class="text-center mb-4">
+            <span class="badge bg-success fs-6 px-4 py-2">✅ COMPLETED & PRODUCTION-READY</span>
+          </div>
+
+          <!-- Overview -->
+          <div class="mb-5">
+            <h2 style="color: #6BFF57;">📋 System Overview</h2>
+            <p>The Account System provides a complete user management solution with:</p>
+            <ul style="color: #C7C7C7;">
+              <li><strong>Multi-User Types:</strong> Buyer, Vendor, Admin with role-based access</li>
+              <li><strong>Secure Authentication:</strong> Email verification, 2FA with OTP, password reset</li>
+              <li><strong>Profile Management:</strong> Multi-step setup with KYC for vendors</li>
+              <li><strong>Dashboard System:</strong> Role-specific dashboards with real-time data</li>
+              <li><strong>Wallet Integration:</strong> Complete financial tracking system</li>
+            </ul>
+          </div>
+
+          <!-- Completed Features -->
+          <div class="mb-5">
+            <h2 style="color: #6BFF57;">✅ Completed Features</h2>
+            
+            <div class="row g-4">
+              <!-- Authentication -->
+              <div class="col-md-6">
+                <div class="card" style="background: #18181C; border: 1px solid #23232A;">
+                  <div class="card-body">
+                    <h5 style="color: #6BFF57;">🔐 Authentication System</h5>
+                    <ul class="list-unstyled" style="color: #C7C7C7;">
+                      <li>✅ User registration (Buyer/Vendor)</li>
+                      <li>✅ Email verification with activation</li>
+                      <li>✅ Login with 2FA OTP</li>
+                      <li>✅ Password reset functionality</li>
+                      <li>✅ Session management</li>
+                      <li>✅ Role-based access control</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Profile Management -->
+              <div class="col-md-6">
+                <div class="card" style="background: #18181C; border: 1px solid #23232A;">
+                  <div class="card-body">
+                    <h5 style="color: #6BFF57;">👤 Profile Management</h5>
+                    <ul class="list-unstyled" style="color: #C7C7C7;">
+                      <li>✅ Multi-step profile setup</li>
+                      <li>✅ Store address with map integration</li>
+                      <li>✅ KYC document upload (PAN/GSTIN)</li>
+                      <li>✅ Phone verification with OTP</li>
+                      <li>✅ Auto-KYC approval system</li>
+                      <li>✅ Profile completeness validation</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Dashboard System -->
+              <div class="col-md-6">
+                <div class="card" style="background: #18181C; border: 1px solid #23232A;">
+                  <div class="card-body">
+                    <h5 style="color: #6BFF57;">📊 Dashboard System</h5>
+                    <ul class="list-unstyled" style="color: #C7C7C7;">
+                      <li>✅ User Dashboard (Buyers)</li>
+                      <li>✅ Vendor Dashboard (Sellers)</li>
+                      <li>✅ Admin Dashboard (Management)</li>
+                      <li>✅ Real-time statistics</li>
+                      <li>✅ Transaction history</li>
+                      <li>✅ KYC status tracking</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <!-- KYC System -->
+              <div class="col-md-6">
+                <div class="card" style="background: #18181C; border: 1px solid #23232A;">
+                  <div class="card-body">
+                    <h5 style="color: #6BFF57;">📋 KYC System</h5>
+                    <ul class="list-unstyled" style="color: #C7C7C7;">
+                      <li>✅ PAN number validation</li>
+                      <li>✅ GSTIN number validation</li>
+                      <li>✅ Document upload system</li>
+                      <li>✅ Auto-approval workflow</li>
+                      <li>✅ Status tracking</li>
+                      <li>✅ Admin KYC management</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Technical Implementation -->
+          <div class="mb-5">
+            <h2 style="color: #6BFF57;">⚙️ Technical Implementation</h2>
+            
+            <div class="row g-4">
+              <!-- Backend -->
+              <div class="col-md-6">
+                <div class="card" style="background: #18181C; border: 1px solid #23232A;">
+                  <div class="card-body">
+                    <h5 style="color: #6BFF57;">🔧 Backend (Django)</h5>
+                    <ul class="list-unstyled" style="color: #C7C7C7;">
+                      <li>✅ Custom User Model</li>
+                      <li>✅ VendorProfile & VendorKYC models</li>
+                      <li>✅ Wallet & Transaction system</li>
+                      <li>✅ OTP generation & validation</li>
+                      <li>✅ File upload handling</li>
+                      <li>✅ Email/SMS integration</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Frontend -->
+              <div class="col-md-6">
+                <div class="card" style="background: #18181C; border: 1px solid #23232A;">
+                  <div class="card-body">
+                    <h5 style="color: #6BFF57;">🎨 Frontend (Bootstrap 5)</h5>
+                    <ul class="list-unstyled" style="color: #C7C7C7;">
+                      <li>✅ Apple-like dark theme</li>
+                      <li>✅ Responsive design</li>
+                      <li>✅ Interactive maps (MapLibre GL)</li>
+                      <li>✅ Real-time OTP validation</li>
+                      <li>✅ Custom alert system</li>
+                      <li>✅ Glassmorphism effects</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Database Schema -->
+          <div class="mb-5">
+            <h2 style="color: #6BFF57;">🗄️ Database Schema</h2>
+            <div class="table-responsive">
+              <table class="table table-dark">
+                <thead>
+                  <tr>
+                    <th style="color: #6BFF57;">Model</th>
+                    <th style="color: #6BFF57;">Purpose</th>
+                    <th style="color: #6BFF57;">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>User</td>
+                    <td>Custom user model with role-based access</td>
+                    <td><span class="badge bg-success">✅ Complete</span></td>
+                  </tr>
+                  <tr>
+                    <td>VendorProfile</td>
+                    <td>Store information and KYC status</td>
+                    <td><span class="badge bg-success">✅ Complete</span></td>
+                  </tr>
+                  <tr>
+                    <td>VendorKYC</td>
+                    <td>KYC documents and verification</td>
+                    <td><span class="badge bg-success">✅ Complete</span></td>
+                  </tr>
+                  <tr>
+                    <td>Wallet</td>
+                    <td>User wallet and balance tracking</td>
+                    <td><span class="badge bg-success">✅ Complete</span></td>
+                  </tr>
+                  <tr>
+                    <td>WalletTransaction</td>
+                    <td>Transaction history and logging</td>
+                    <td><span class="badge bg-success">✅ Complete</span></td>
+                  </tr>
+                  <tr>
+                    <td>PhoneOTP</td>
+                    <td>Phone verification OTP storage</td>
+                    <td><span class="badge bg-success">✅ Complete</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Security Features -->
+          <div class="mb-5">
+            <h2 style="color: #6BFF57;">🔒 Security Features</h2>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="d-flex align-items-center mb-2">
+                  <i class="bi bi-shield-check text-success me-2"></i>
+                  <span style="color: #C7C7C7;">Email verification required</span>
+                </div>
+                <div class="d-flex align-items-center mb-2">
+                  <i class="bi bi-shield-check text-success me-2"></i>
+                  <span style="color: #C7C7C7;">2FA with OTP validation</span>
+                </div>
+                <div class="d-flex align-items-center mb-2">
+                  <i class="bi bi-shield-check text-success me-2"></i>
+                  <span style="color: #C7C7C7;">Password hashing (bcrypt)</span>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="d-flex align-items-center mb-2">
+                  <i class="bi bi-shield-check text-success me-2"></i>
+                  <span style="color: #C7C7C7;">CSRF protection</span>
+                </div>
+                <div class="d-flex align-items-center mb-2">
+                  <i class="bi bi-shield-check text-success me-2"></i>
+                  <span style="color: #C7C7C7;">Session management</span>
+                </div>
+                <div class="d-flex align-items-center mb-2">
+                  <i class="bi bi-shield-check text-success me-2"></i>
+                  <span style="color: #C7C7C7;">Role-based access control</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- User Flows -->
+          <div class="mb-5">
+            <h2 style="color: #6BFF57;">🔄 User Flows</h2>
+            
+            <div class="row g-4">
+              <!-- Buyer Flow -->
+              <div class="col-md-6">
+                <div class="card" style="background: #18181C; border: 1px solid #23232A;">
+                  <div class="card-body">
+                    <h5 style="color: #6BFF57;">👤 Buyer Registration Flow</h5>
+                    <ol style="color: #C7C7C7;">
+                      <li>Sign up with email & password</li>
+                      <li>Verify email address</li>
+                      <li>Login with 2FA OTP</li>
+                      <li>Complete basic profile</li>
+                      <li>Access buyer dashboard</li>
+                    </ol>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Vendor Flow -->
+              <div class="col-md-6">
+                <div class="card" style="background: #18181C; border: 1px solid #23232A;">
+                  <div class="card-body">
+                    <h5 style="color: #6BFF57;">🏪 Vendor Registration Flow</h5>
+                    <ol style="color: #C7C7C7;">
+                      <li>Sign up as vendor</li>
+                      <li>Verify email address</li>
+                      <li>Login with 2FA OTP</li>
+                      <li>Complete multi-step profile</li>
+                      <li>Upload KYC documents</li>
+                      <li>Auto-KYC approval</li>
+                      <li>Access vendor dashboard</li>
+                    </ol>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- API Endpoints -->
+          <div class="mb-5">
+            <h2 style="color: #6BFF57;">🌐 API Endpoints</h2>
+            <div class="table-responsive">
+              <table class="table table-dark">
+                <thead>
+                  <tr>
+                    <th style="color: #6BFF57;">Endpoint</th>
+                    <th style="color: #6BFF57;">Method</th>
+                    <th style="color: #6BFF57;">Purpose</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>/accounts/signup/</td>
+                    <td>GET/POST</td>
+                    <td>User registration</td>
+                  </tr>
+                  <tr>
+                    <td>/accounts/login/</td>
+                    <td>GET/POST</td>
+                    <td>User authentication</td>
+                  </tr>
+                  <tr>
+                    <td>/accounts/otp/</td>
+                    <td>GET/POST</td>
+                    <td>2FA OTP verification</td>
+                  </tr>
+                  <tr>
+                    <td>/accounts/send_phone_otp/</td>
+                    <td>POST</td>
+                    <td>Send phone OTP</td>
+                  </tr>
+                  <tr>
+                    <td>/accounts/verify_phone_otp/</td>
+                    <td>POST</td>
+                    <td>Verify phone OTP</td>
+                  </tr>
+                  <tr>
+                    <td>/accounts/profile-setup/</td>
+                    <td>GET/POST</td>
+                    <td>Profile completion</td>
+                  </tr>
+                  <tr>
+                    <td>/accounts/user/dashboard/</td>
+                    <td>GET</td>
+                    <td>Buyer dashboard</td>
+                  </tr>
+                  <tr>
+                    <td>/accounts/vendor/dashboard/</td>
+                    <td>GET</td>
+                    <td>Vendor dashboard</td>
+                  </tr>
+                  <tr>
+                    <td>/accounts/admin/dashboard/</td>
+                    <td>GET</td>
+                    <td>Admin dashboard</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Testing Status -->
+          <div class="mb-5">
+            <h2 style="color: #6BFF57;">🧪 Testing Status</h2>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="d-flex align-items-center mb-2">
+                  <i class="bi bi-check-circle text-success me-2"></i>
+                  <span style="color: #C7C7C7;">User registration & login</span>
+                </div>
+                <div class="d-flex align-items-center mb-2">
+                  <i class="bi bi-check-circle text-success me-2"></i>
+                  <span style="color: #C7C7C7;">Email verification flow</span>
+                </div>
+                <div class="d-flex align-items-center mb-2">
+                  <i class="bi bi-check-circle text-success me-2"></i>
+                  <span style="color: #C7C7C7;">2FA OTP system</span>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="d-flex align-items-center mb-2">
+                  <i class="bi bi-check-circle text-success me-2"></i>
+                  <span style="color: #C7C7C7;">Profile setup wizard</span>
+                </div>
+                <div class="d-flex align-items-center mb-2">
+                  <i class="bi bi-check-circle text-success me-2"></i>
+                  <span style="color: #C7C7C7;">KYC document upload</span>
+                </div>
+                <div class="d-flex align-items-center mb-2">
+                  <i class="bi bi-check-circle text-success me-2"></i>
+                  <span style="color: #C7C7C7;">Dashboard functionality</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Next Steps -->
+          <div class="mb-5">
+            <h2 style="color: #6BFF57;">🚀 Next Steps</h2>
+            <div class="alert alert-info" style="background: rgba(13,202,240,0.1); border: 1px solid #0dcaf0; color: #fff;">
+              <h5>Ready for Phase 2 Development:</h5>
+              <ul class="mb-0" style="color: #C7C7C7;">
+                <li>Product catalog and management</li>
+                <li>Order processing system</li>
+                <li>Payment gateway integration</li>
+                <li>Real-time messaging</li>
+                <li>Analytics and reporting</li>
+                <li>Mobile app development</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="text-center">
+            <p style="color: #C7C7C7;">Documentation last updated: <span style="color: #6BFF57;">July 31, 2025</span></p>
+            <a href="/docs/" class="btn btn-outline-success">← Back to Documentation</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .table-dark {
+    background: transparent;
+    color: #fff;
+  }
+  .table-dark th {
+    border-color: #23232A;
+    color: #6BFF57;
+  }
+  .table-dark td {
+    border-color: #23232A;
+  }
+</style>
+{% endblock %} 

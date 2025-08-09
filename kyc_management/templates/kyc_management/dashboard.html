@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block title %}KYC Management Dashboard - KABAADWALA™{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card" style="background:#121212; border:1px solid #333;">
+                <div class="card-header" style="background:#0B0B0F; border-bottom:1px solid #333;">
+                    <h4 class="mb-0" style="color:#6BFF57;">
+                        <i class="bi bi-shield-check"></i> KYC Management Dashboard
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Statistics Cards -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="card text-center" style="background:#0B0B0F; border:1px solid #333;">
+                                <div class="card-body">
+                                    <i class="bi bi-clock" style="font-size:2rem; color:#FFA500;"></i>
+                                    <h3 class="mt-2" style="color:#FFFFFF;">{{ total_pending }}</h3>
+                                    <p class="text-muted mb-0">Pending Applications</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card text-center" style="background:#0B0B0F; border:1px solid #333;">
+                                <div class="card-body">
+                                    <i class="bi bi-check-circle" style="font-size:2rem; color:#6BFF57;"></i>
+                                    <h3 class="mt-2" style="color:#FFFFFF;">{{ total_approved }}</h3>
+                                    <p class="text-muted mb-0">Approved Applications</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card text-center" style="background:#0B0B0F; border:1px solid #333;">
+                                <div class="card-body">
+                                    <i class="bi bi-x-circle" style="font-size:2rem; color:#FF4444;"></i>
+                                    <h3 class="mt-2" style="color:#FFFFFF;">{{ total_rejected }}</h3>
+                                    <p class="text-muted mb-0">Rejected Applications</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card" style="background:#0B0B0F; border:1px solid #333;">
+                                <div class="card-header" style="border-bottom:1px solid #333;">
+                                    <h6 class="mb-0" style="color:#6BFF57;">Quick Actions</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex gap-2">
+                                        <a href="{% url 'kyc_management:pending_list' %}" class="btn btn-warning">
+                                            <i class="bi bi-clock"></i> Review Pending KYC
+                                        </a>
+                                        <a href="#" class="btn btn-info">
+                                            <i class="bi bi-download"></i> Export Reports
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Approvals -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card" style="background:#0B0B0F; border:1px solid #333;">
+                                <div class="card-header" style="border-bottom:1px solid #333;">
+                                    <h6 class="mb-0" style="color:#6BFF57;">Recent KYC Approvals</h6>
+                                </div>
+                                <div class="card-body">
+                                    {% if recent_approvals %}
+                                        <div class="table-responsive">
+                                            <table class="table table-dark table-sm">
+                                                <thead>
+                                                    <tr>
+                                                        <th style="color:#6BFF57;">Vendor</th>
+                                                        <th style="color:#6BFF57;">Status</th>
+                                                        <th style="color:#6BFF57;">Reviewed By</th>
+                                                        <th style="color:#6BFF57;">Date</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for approval in recent_approvals %}
+                                                    <tr>
+                                                        <td style="color:#C7C7C7;">{{ approval.vendor_profile.store_name }}</td>
+                                                        <td>
+                                                            {% if approval.status == 'approved' %}
+                                                                <span class="badge bg-success">Approved</span>
+                                                            {% else %}
+                                                                <span class="badge bg-danger">Rejected</span>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td style="color:#C7C7C7;">{{ approval.admin_user.full_name|default:approval.admin_user.username }}</td>
+                                                        <td style="color:#C7C7C7;">{{ approval.reviewed_at|date:"M d, Y" }}</td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    {% else %}
+                                        <p class="text-muted text-center">No recent approvals</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

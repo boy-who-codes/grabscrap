@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container my-4">
+    <h2 class="text-success">KYC Reapplication</h2>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    <div class="card border-0 shadow-lg">
+        <div class="card-body">
+            <h5 class="card-title text-success">Previous Rejection Details</h5>
+            <p class="text-light"><strong>Status:</strong> {{ latest_approval.get_status_display }}</p>
+            <p class="text-light"><strong>Rejected On:</strong> {{ latest_approval.reviewed_at|date:'d M Y' }}</p>
+            <p class="text-light"><strong>Reason:</strong> {{ latest_approval.rejection_reason|default:'Not specified' }}</p>
+            
+            {% if latest_approval.document_verification_notes %}
+                <div class="alert alert-warning mt-3">
+                    <h6 class="text-warning">Document Verification Notes</h6>
+                    <p class="text-light">{{ latest_approval.document_verification_notes }}</p>
+                </div>
+            {% endif %}
+            
+            <form method="post" class="mt-4">
+                {% csrf_token %}
+                <div class="form-group">
+                    <p class="text-light mb-4">Please ensure all required documents are uploaded before reapplying.</p>
+                    <div class="d-grid gap-2 d-md-flex">
+                        <button type="submit" class="btn btn-success px-4">
+                            <i class="fas fa-redo me-2"></i>Reapply for KYC
+                        </button>
+                        <a href="{% url 'vendor_dashboard' %}" class="btn btn-outline-light px-4">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

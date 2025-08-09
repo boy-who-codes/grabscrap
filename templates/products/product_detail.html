@@ -1,0 +1,373 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ product.title }} - KABAADWALA™{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row">
+        <!-- Product Images -->
+        <div class="col-lg-6">
+            <div class="card" style="background:#121212; border:1px solid #333;">
+                <div class="card-body">
+                    {% if product.images.exists %}
+                        <!-- Main Image -->
+                        <div class="text-center mb-3">
+                            <img id="main-image" src="{{ product.images.first.image.url }}" 
+                                 alt="{{ product.title }}" class="img-fluid" 
+                                 style="max-height:400px; object-fit:contain;">
+                        </div>
+                        
+                        <!-- Thumbnail Images -->
+                        {% if product.images.count > 1 %}
+                            <div class="row">
+                                {% for image in product.images.all %}
+                                <div class="col-3 mb-2">
+                                    <img src="{{ image.image.url }}" alt="{{ product.title }}" 
+                                         class="img-thumbnail thumbnail-image" 
+                                         style="cursor:pointer; height:80px; object-fit:cover;"
+                                         onclick="changeMainImage('{{ image.image.url }}')">
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-image" style="font-size:4rem; color:#333;"></i>
+                            <p class="text-secondary mt-2">No images available</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Info -->
+        <div class="col-lg-6">
+            <div class="card" style="background:#121212; border:1px solid #333;">
+                <div class="card-body">
+                    <!-- Product Title and Badges -->
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h3 style="color:#FFFFFF;">{{ product.title }}</h3>
+                        <div>
+                            {% if product.is_featured %}
+                                <span class="badge bg-warning">
+                                    <i class="bi bi-star-fill"></i> Featured
+                                </span>
+                            {% endif %}
+                            {% if product.stock_quantity == 0 %}
+                                <span class="badge bg-danger">Out of Stock</span>
+                            {% elif product.stock_quantity < 10 %}
+                                <span class="badge bg-warning">Low Stock</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Vendor Info -->
+                    <div class="mb-3">
+                        <small class="text-muted">
+                            <i class="bi bi-shop"></i> Sold by: 
+                            <a href="#" style="color:#6BFF57;">{{ product.vendor.store_name }}</a>
+                        </small>
+                    </div>
+
+                    <!-- Price -->
+                    <div class="mb-3">
+                        <h2 style="color:#6BFF57;">₹{{ product.price }}</h2>
+                        <small class="text-secondary">per {{ product.get_unit_display }}</small>
+                    </div>
+
+                    <!-- Stock Info -->
+                    <div class="mb-3">
+                        <p class="mb-1">
+                            <i class="bi bi-box"></i> 
+                            <strong style="color:#FFFFFF;">{{ product.stock_quantity }}</strong> available
+                        </p>
+                        {% if product.stock_quantity > 0 %}
+                            <small class="text-success">
+                                <i class="bi bi-check-circle"></i> In Stock
+                            </small>
+                        {% else %}
+                            <small class="text-danger">
+                                <i class="bi bi-x-circle"></i> Out of Stock
+                            </small>
+                        {% endif %}
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-4">
+                        <h6 style="color:#6BFF57;">Description</h6>
+                        <p style="color:#C7C7C7;">{{ product.description|linebreaks }}</p>
+                    </div>
+
+                    <!-- Specifications -->
+                    {% if product.specifications %}
+                        <div class="mb-4">
+                            <h6 style="color:#6BFF57;">Specifications</h6>
+                            <div class="row">
+                                {% for key, value in product.specifications.items %}
+                                <div class="col-6 mb-2">
+                                    <small class="text-secondary">{{ key }}:</small>
+                                    <div style="color:#FFFFFF;">{{ value }}</div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Tags -->
+                    {% if product.tags %}
+                        <div class="mb-4">
+                            <h6 style="color:#6BFF57;">Tags</h6>
+                            {% for tag in product.tags %}
+                                <span class="badge bg-secondary me-1">{{ tag }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <!-- Purchase Actions -->
+                    {% if product.can_order %}
+                        <form method="post" action="{% url 'orders:add_to_cart' product.id %}" class="mb-3">
+                            {% csrf_token %}
+                            <div class="row">
+                                <div class="col-4">
+                                    <label for="quantity" class="form-label" style="color:#FFFFFF;">Quantity</label>
+                                    <input type="number" class="form-control" id="quantity" name="quantity" 
+                                           value="1" min="{{ product.minimum_order_quantity }}" 
+                                           max="{{ product.stock_quantity }}"
+                                           style="background:#0B0B0F; border:1px solid #333; color:#FFFFFF;">
+                                </div>
+                                <div class="col-8">
+                                    <label class="form-label" style="color:#FFFFFF;">&nbsp;</label>
+                                    <button type="submit" class="btn btn-success w-100">
+                                        <i class="bi bi-cart-plus"></i> Add to Cart
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i> This product is currently unavailable for ordering.
+                        </div>
+                    {% endif %}
+
+                    <!-- Wishlist and Share -->
+                    <div class="d-flex gap-2">
+                        {% if user.is_authenticated %}
+                            {% if in_wishlist %}
+                                <a href="{% url 'products:remove_from_wishlist' product.id %}" 
+                                   class="btn btn-outline-danger">
+                                    <i class="bi bi-heart-fill"></i> Remove from Wishlist
+                                </a>
+                            {% else %}
+                                <a href="{% url 'products:add_to_wishlist' product.id %}" 
+                                   class="btn btn-outline-success">
+                                    <i class="bi bi-heart"></i> Add to Wishlist
+                                </a>
+                            {% endif %}
+                        {% endif %}
+                        <button class="btn btn-outline-info" onclick="shareProduct()">
+                            <i class="bi bi-share"></i> Share
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Details Tabs -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card" style="background:#121212; border:1px solid #333;">
+                <div class="card-header" style="background:#0B0B0F; border-bottom:1px solid #333;">
+                    <ul class="nav nav-tabs card-header-tabs" id="productTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="reviews-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#reviews" type="button" role="tab">
+                                <i class="bi bi-star"></i> Reviews ({{ reviews.count }})
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="related-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#related" type="button" role="tab">
+                                <i class="bi bi-grid"></i> Related Products
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content" id="productTabsContent">
+                        <!-- Reviews Tab -->
+                        <div class="tab-pane fade show active" id="reviews" role="tabpanel">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <h5 style="color:#6BFF57;">Customer Reviews</h5>
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-2">
+                                            {% for i in "12345" %}
+                                                {% if forloop.counter <= avg_rating %}
+                                                    <i class="bi bi-star-fill text-warning"></i>
+                                                {% else %}
+                                                    <i class="bi bi-star text-muted"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                        <span style="color:#FFFFFF;">{{ avg_rating|floatformat:1 }} out of 5</span>
+                                        <span class="text-secondary ms-2">({{ reviews.count }} reviews)</span>
+                                    </div>
+                                </div>
+                                {% if review_form %}
+                                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#reviewModal">
+                                        <i class="bi bi-pencil"></i> Write Review
+                                    </button>
+                                {% endif %}
+                            </div>
+
+                            {% if reviews %}
+                                {% for review in reviews %}
+                                <div class="border-bottom pb-3 mb-3" style="border-color:#333 !important;">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <div class="d-flex align-items-center mb-2">
+                                                <div class="me-2">
+                                                    {% for i in "12345" %}
+                                                        {% if forloop.counter <= review.rating %}
+                                                            <i class="bi bi-star-fill text-warning"></i>
+                                                        {% else %}
+                                                            <i class="bi bi-star text-secondary"></i>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </div>
+                                                <strong style="color:#FFFFFF;">{{ review.user.full_name|default:review.user.username }}</strong>
+                                                {% if review.is_verified_purchase %}
+                                                    <span class="badge bg-success ms-2">Verified Purchase</span>
+                                                {% endif %}
+                                            </div>
+                                            {% if review.title %}
+                                                <h6 style="color:#6BFF57;">{{ review.title }}</h6>
+                                            {% endif %}
+                                            <p style="color:#C7C7C7;">{{ review.comment }}</p>
+                                        </div>
+                                        <small class="text-secondary">{{ review.created_at|date:"M d, Y" }}</small>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="bi bi-star" style="font-size:3rem; color:#333;"></i>
+                                    <p class="text-secondary mt-2">No reviews yet. Be the first to review this product!</p>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Related Products Tab -->
+                        <div class="tab-pane fade" id="related" role="tabpanel">
+                            <h5 style="color:#6BFF57;">More from {{ product.vendor.store_name }}</h5>
+                            <div class="row">
+                                {% for related_product in related_products %}
+                                <div class="col-md-6 col-lg-3 mb-3">
+                                    <div class="card h-100" style="background:#0B0B0F; border:1px solid #333;">
+                                        {% if related_product.images.first %}
+                                            <img src="{{ related_product.images.first.image.url }}" 
+                                                 class="card-img-top" alt="{{ related_product.title }}"
+                                                 style="height:150px; object-fit:cover;">
+                                        {% endif %}
+                                        <div class="card-body">
+                                            <h6 class="card-title" style="color:#FFFFFF;">{{ related_product.title }}</h6>
+                                            <p class="card-text" style="color:#6BFF57;">₹{{ related_product.price }}</p>
+                                            <a href="{% url 'products:product_detail' related_product.id %}" 
+                                               class="btn btn-outline-success btn-sm">
+                                                View Details
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Review Modal -->
+{% if review_form %}
+<div class="modal fade" id="reviewModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content" style="background:#121212; border:1px solid #333;">
+            <div class="modal-header" style="border-bottom:1px solid #333;">
+                <h5 class="modal-title" style="color:#6BFF57;">Write a Review</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'products:add_review' product.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="id_rating" class="form-label" style="color:#FFFFFF;">Rating</label>
+                        <select class="form-select" id="id_rating" name="rating" 
+                                style="background:#0B0B0F; border:1px solid #333; color:#FFFFFF;">
+                            <option value="">Select rating</option>
+                            <option value="5">5 Stars - Excellent</option>
+                            <option value="4">4 Stars - Very Good</option>
+                            <option value="3">3 Stars - Good</option>
+                            <option value="2">2 Stars - Fair</option>
+                            <option value="1">1 Star - Poor</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_title" class="form-label" style="color:#FFFFFF;">Title (Optional)</label>
+                        <input type="text" class="form-control" id="id_title" name="title" 
+                               style="background:#0B0B0F; border:1px solid #333; color:#FFFFFF;">
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_comment" class="form-label" style="color:#FFFFFF;">Review</label>
+                        <textarea class="form-control" id="id_comment" name="comment" rows="4" 
+                                  style="background:#0B0B0F; border:1px solid #333; color:#FFFFFF;"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top:1px solid #333;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Submit Review</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function changeMainImage(imageUrl) {
+    document.getElementById('main-image').src = imageUrl;
+}
+
+function shareProduct() {
+    if (navigator.share) {
+        navigator.share({
+            title: '{{ product.title }}',
+            text: 'Check out this product on KABAADWALA™',
+            url: window.location.href
+        });
+    } else {
+        // Fallback: copy to clipboard
+        navigator.clipboard.writeText(window.location.href).then(function() {
+            alert('Product link copied to clipboard!');
+        });
+    }
+}
+
+// Update quantity validation
+document.getElementById('quantity').addEventListener('change', function() {
+    const quantity = parseInt(this.value);
+    const min = parseInt(this.min);
+    const max = parseInt(this.max);
+    
+    if (quantity < min) {
+        this.value = min;
+    } else if (quantity > max) {
+        this.value = max;
+    }
+});
+</script>
+{% endblock %} 

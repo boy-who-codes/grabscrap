@@ -1,0 +1,353 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Home - KABAADWALA™{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Custom Styles */
+    .hero-section {
+        background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1605000797499-95a51c5269ae?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');
+        background-size: cover;
+        background-position: center;
+        color: white;
+        padding: 120px 0;
+        margin-top: -24px; /* Offset the default padding */
+    }
+    
+    /* Category Card Styles */
+    .feature-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border-radius: 10px;
+        overflow: hidden;
+        background: #1e1e2d;
+        border: 1px solid #2b2b40;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1.5rem rgba(107, 255, 87, 0.15);
+    }
+    
+    .feature-icon {
+        margin-bottom: 1rem;
+        color: #6bff57;
+    }
+    
+    .feature-card .card-title {
+        color: #fff;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+    }
+    
+    .feature-card .card-text {
+        min-height: 48px;
+        color: #a1a5b7 !important;
+    }
+    
+    .commission-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(107, 255, 87, 0.9);
+        color: #000;
+        font-weight: 600;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+    }
+    
+    /* Search Form Styles */
+    .search-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .search-form .form-control,
+    .search-form .form-select {
+        border: 1px solid #2b2b40;
+        background-color: #1e1e2d;
+        color: #fff;
+    }
+    
+    .search-form .form-control:focus,
+    .search-form .form-select:focus {
+        background-color: #1e1e2d;
+        color: #fff;
+        border-color: #6bff57;
+        box-shadow: 0 0 0 0.25rem rgba(107, 255, 87, 0.25);
+    }
+    
+    /* Category Cards */
+    .category-card {
+        background: #1e1e2d;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+        border: 1px solid #2b2b40;
+    }
+    
+    .category-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1.5rem rgba(107, 255, 87, 0.15);
+        border-color: #6bff57;
+    }
+    
+    .category-icon i {
+        transition: all 0.3s ease;
+    }
+    
+    .category-card:hover .category-icon i {
+        transform: scale(1.2);
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .search-form .form-select {
+            max-width: 100% !important;
+            margin-top: 10px;
+        }
+        
+        .input-group {
+            flex-direction: column;
+        }
+        
+        .input-group > *:not(:last-child) {
+            margin-bottom: 10px;
+        }
+    }
+    .feature-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: #1a1a1a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        transition: all 0.3s ease;
+    }
+    .feature-card:hover .feature-icon {
+        transform: translateY(-10px);
+        box-shadow: 0 10px 20px rgba(107, 255, 87, 0.2);
+    }
+    .price-counter {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #6BFF57;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="text-white py-5" style="max-width: 800px; margin: 0 auto; text-align: center;">
+            <h1 class="display-4 fw-bold mb-4">Turn Your Scrap into Cash</h1>
+            <p class="lead mb-5">Get the best prices for your scrap materials with our easy pickup service. Join thousands of satisfied customers today!</p>
+            
+            <!-- Search Form -->
+            <div class="search-container mb-5">
+                <form action="{% url 'products:product_list' %}" method="get" class="search-form">
+                    <div class="input-group input-group-lg">
+                        <input type="text" name="q" class="form-control form-control-lg" placeholder="Search for scrap items..." value="{{ search_query }}">
+                        <select name="category" class="form-select" style="max-width: 200px;">
+                            <option value="">All Categories</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}" {% if selected_category == cat.id|stringformat:'s' %}selected{% endif %}>
+                                {{ cat.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <button class="btn btn-success" type="submit">
+                            <i class="fas fa-search me-1"></i> Search
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <a href="{% url 'accounts:signup' %}" class="btn btn-success btn-lg px-4 py-3 fw-bold">
+                    Get Started <i class="fas fa-arrow-right ms-2"></i>
+                </a>
+                <a href="#how-it-works" class="btn btn-outline-light btn-lg px-4 py-3">
+                    <i class="fas fa-play-circle me-2"></i> How It Works
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="py-5 bg-dark">
+    <div class="container">
+        <div class="row g-4 text-center">
+            <div class="col-md-3 col-6">
+                <div class="p-3">
+                    <div class="price-counter mb-2">10,000+</div>
+                    <p class="text-muted mb-0">Happy Customers</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="p-3">
+                    <div class="price-counter mb-2">50+</div>
+                    <p class="text-muted mb-0">Cities Served</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="p-3">
+                    <div class="price-counter mb-2">1000+</div>
+                    <p class="text-muted mb-0">Tons Recycled</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="p-3">
+                    <div class="price-counter mb-2">24/7</div>
+                    <p class="text-muted mb-0">Support</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Popular Categories Section -->
+<section id="popular-categories" class="py-5 bg-dark">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="text-success fw-bold">POPULAR CATEGORIES</span>
+            <h2 class="fw-bold text-white">Browse by Category</h2>
+            <p class="text-secondary">Find the best prices for your scrap materials</p>
+        </div>
+        <div class="row g-4">
+            {% for category in popular_categories %}
+            <div class="col-lg-2 col-md-4 col-6">
+                <a href="{% url 'products:product_list' %}?category={{ category.id }}" class="text-decoration-none">
+                    <div class="category-card text-center p-3 h-100">
+                        <div class="category-icon mb-3">
+                            {% if 'metal' in category.name|lower %}
+                                <i class="fas fa-car text-success" style="font-size: 2rem;"></i>
+                            {% elif 'e-waste' in category.name|lower or 'electronic' in category.name|lower %}
+                                <i class="fas fa-laptop text-success" style="font-size: 2rem;"></i>
+                            {% elif 'plastic' in category.name|lower %}
+                                <i class="fas fa-bottle-water text-success" style="font-size: 2rem;"></i>
+                            {% elif 'paper' in category.name|lower %}
+                                <i class="fas fa-newspaper text-success" style="font-size: 2rem;"></i>
+                            {% else %}
+                                <i class="fas fa-trash-alt text-success" style="font-size: 2rem;"></i>
+                            {% endif %}
+                        </div>
+                        <h5 class="text-white mb-0">{{ category.name }}</h5>
+                        <small class="text-secondary">{{ category.product_count }} items</small>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- All Categories Section -->
+<section id="all-categories" class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="text-success fw-bold">ALL CATEGORIES</span>
+            <h2 class="fw-bold">We Buy All Types of Scrap</h2>
+            <p class="text-secondary">Competitive rates with transparent commission structure</p>
+        </div>
+        <div class="row g-4">
+            {% for category in categories %}
+            <div class="col-lg-3 col-md-6">
+                <div class="card h-100 border-0 feature-card">
+                    <div class="card-body text-center p-4 position-relative">
+                        {% if category.commission_rate %}
+                        <div class="position-absolute top-0 end-0 m-2">
+                            <span class="badge bg-success">
+                                {{ category.commission_rate }}% Commission
+                            </span>
+                        </div>
+                        {% endif %}
+                        <div class="feature-icon">
+                            {% if 'metal' in category.name|lower %}
+                                <i class="fas fa-car text-success" style="font-size: 2rem;"></i>
+                            {% elif 'e-waste' in category.name|lower or 'electronic' in category.name|lower %}
+                                <i class="fas fa-laptop text-success" style="font-size: 2rem;"></i>
+                            {% elif 'plastic' in category.name|lower or 'paper' in category.name|lower %}
+                                <i class="fas fa-bottle-water text-success" style="font-size: 2rem;"></i>
+                            {% else %}
+                                <i class="fas fa-trash-alt text-success" style="font-size: 2rem;"></i>
+                            {% endif %}
+                        </div>
+                        <h4 class="card-title">{{ category.name }}</h4>
+                        <p class="card-text">{{ category.description|default:"Get the best price for your items" }}</p>
+                        <div class="mt-3">
+                            <a href="{% url 'products:category_detail' category_id=category.id %}" class="btn btn-outline-success btn-sm">
+                                View Details <i class="fas fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center">
+                <div class="alert alert-info">No categories available at the moment.</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- How It Works -->
+<section id="how-it-works" class="py-5 bg-dark">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="text-success fw-bold">PROCESS</span>
+            <h2 class="text-white fw-bold">How It Works</h2>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="text-center p-4 h-100">
+                    <div class="bg-success rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 100px; height: 100px; margin: 0 auto;">
+                        <i class="fas fa-calendar-check text-white" style="font-size: 2.5rem;"></i>
+                    </div>
+                    <h4 class="text-white mb-3">1. Book a Pickup</h4>
+                    <p class="text-muted">Schedule a pickup at your convenience</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center p-4 h-100">
+                    <div class="bg-success rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 100px; height: 100px; margin: 0 auto;">
+                        <i class="fas fa-truck text-white" style="font-size: 2.5rem;"></i>
+                    </div>
+                    <h4 class="text-white mb-3">2. We Collect</h4>
+                    <p class="text-muted">Our team collects from your doorstep</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center p-4 h-100">
+                    <div class="bg-success rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 100px; height: 100px; margin: 0 auto;">
+                        <i class="fas fa-money-bill-wave text-white" style="font-size: 2.5rem;"></i>
+                    </div>
+                    <h4 class="text-white mb-3">3. Get Paid</h4>
+                    <p class="text-muted">Instant payment after verification</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action -->
+<section class="py-5 bg-success text-white">
+    <div class="container text-center">
+        <h2 class="mb-4">Ready to Sell Your Scrap?</h2>
+        <p class="lead mb-4">Get the best prices and contribute to a cleaner environment</p>
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <a href="{% url 'accounts:signup' %}" class="btn btn-dark btn-lg px-4 py-3">
+                Schedule a Pickup Now
+            </a>
+            <a href="tel:+919876543210" class="btn btn-outline-light btn-lg px-4 py-3">
+                <i class="fas fa-phone-alt me-2"></i> Call Us: +91 98765 43210
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}

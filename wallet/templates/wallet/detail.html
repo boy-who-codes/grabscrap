@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Wallet - KABAADWALA™{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2 class="mb-0">My Wallet</h2>
+                        <span class="badge bg-success">Active</span>
+                    </div>
+                    
+                    <!-- Wallet Balance -->
+                    <div class="text-center py-4 mb-4" style="background: #1a1a2e; border-radius: 10px;">
+                        <p class="text-muted mb-2">Available Balance</p>
+                        <h1 class="display-4 fw-bold text-success">₹{{ wallet.get_balance|floatformat:2 }}</h1>
+                        <div class="d-flex justify-content-center gap-3 mt-3">
+                            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addMoneyModal">
+                                <i class="fas fa-plus me-2"></i>Add Money
+                            </button>
+                            <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#withdrawModal">
+                                <i class="fas fa-money-bill-wave me-2"></i>Withdraw
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Stats -->
+                    <div class="row text-center mb-4">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <div class="p-3" style="background: #16213e; border-radius: 8px;">
+                                <h6 class="text-muted mb-1">Total Credit</h6>
+                                <h4 class="text-success mb-0">₹{{ total_credit|floatformat:2 }}</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3" style="background: #16213e; border-radius: 8px;">
+                                <h6 class="text-muted mb-1">Total Debit</h6>
+                                <h4 class="text-success mb-0">₹{{ total_debit|floatformat:2 }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Recent Transactions -->
+                    <div class="mt-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">Recent Transactions</h5>
+                            <a href="{% url 'wallet:transactions' %}" class="btn btn-sm btn-outline-success">
+                                View All <i class="fas fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                        
+                        {% if transactions %}
+                            <div class="list-group">
+                                {% for transaction in transactions %}
+                                <div class="list-group-item border-0 py-3 px-0">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-3">
+                                                {% if transaction.transaction_type == 'credit' %}
+                                                    <div class="bg-success bg-opacity-10 p-3 rounded-circle">
+                                                        <i class="fas fa-arrow-down text-success"></i>
+                                                    </div>
+                                                {% else %}
+                                                    <div class="bg-danger bg-opacity-10 p-3 rounded-circle">
+                                                        <i class="fas fa-arrow-up text-danger"></i>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-1">{{ transaction.description }}</h6>
+                                                <small class="text-muted">{{ transaction.created_at|date:"M d, Y h:i A" }}</small>
+                                            </div>
+                                        </div>
+                                        <div class="text-end">
+                                            <h6 class="mb-1 {% if transaction.transaction_type == 'credit' %}text-success{% else %}text-danger{% endif %}">
+                                                {% if transaction.transaction_type == 'credit' %}+{% else %}-{% endif %}₹{{ transaction.amount|floatformat:2 }}
+                                            </h6>
+                                            <small class="badge {% if transaction.status == 'completed' %}bg-success{% elif transaction.status == 'failed' %}bg-danger{% else %}bg-warning{% endif %}">
+                                                {{ transaction.get_status_display }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-wallet fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">No transactions yet</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Money Modal -->
+<div class="modal fade" id="addMoneyModal" tabindex="-1" aria-labelledby="addMoneyModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-white">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="addMoneyModalLabel">Add Money to Wallet</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'wallet:add_money' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="amount" class="form-label">Amount (₹)</label>
+                        <input type="number" class="form-control bg-dark text-white" id="amount" name="amount" min="1" step="0.01" required>
+                    </div>
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-plus-circle me-2"></i>Add Money
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Withdraw Modal -->
+<div class="modal fade" id="withdrawModal" tabindex="-1" aria-labelledby="withdrawModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-white">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="withdrawModalLabel">Withdraw Funds</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'wallet:withdraw' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="withdrawAmount" class="form-label">Amount (₹)</label>
+                        <input type="number" class="form-control bg-dark text-white" id="withdrawAmount" name="amount" min="1" step="0.01" max="{{ wallet.get_balance }}" required>
+                        <small class="text-muted">Available balance: ₹{{ wallet.get_balance|floatformat:2 }}</small>
+                    </div>
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-paper-plane me-2"></i>Request Withdrawal
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add money form validation
+    document.getElementById('amount').addEventListener('input', function(e) {
+        if (this.value < 1) {
+            this.value = 1;
+        }
+    });
+    
+    // Withdraw form validation
+    document.getElementById('withdrawAmount').addEventListener('input', function(e) {
+        if (this.value < 1) {
+            this.value = 1;
+        } else if (parseFloat(this.value) > {{ wallet.get_balance }}) {
+            this.value = {{ wallet.get_balance }};
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,303 @@
+{% extends 'base.html' %}
+
+{% block title %}KYC Review - {{ vendor_profile.store_name }} - KABAADWALA™{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{% url 'kyc_management:dashboard' %}">
+                            <i class="fas fa-tachometer-alt me-2"></i>
+                            KYC Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{% url 'kyc_management:pending_list' %}">
+                            <i class="fas fa-clock me-2"></i>
+                            Pending Applications
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{% url 'admin_dashboard' %}">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Back to Admin Dashboard
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2 text-white">KYC Review: {{ vendor_profile.store_name }}</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <div class="btn-group me-2">
+                        <a href="{% url 'kyc_management:pending_list' %}" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i> Back to Pending
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="row">
+                <!-- Vendor Information -->
+                <div class="col-lg-8">
+                    <div class="card shadow mb-4" style="background: #121212; border: 1px solid #333;">
+                        <div class="card-header py-3" style="background: #1a1a1a; border-bottom: 1px solid #333;">
+                            <h6 class="m-0 font-weight-bold text-white">
+                                <i class="fas fa-user me-2"></i>Vendor Information
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4 text-center mb-3">
+                                    {% if vendor_profile.user.profile_photo %}
+                                        <img src="{{ vendor_profile.user.profile_photo.url }}" 
+                                             class="rounded-circle mb-3" width="120" height="120">
+                                    {% else %}
+                                        <div class="bg-secondary rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" 
+                                             style="width: 120px; height: 120px;">
+                                            <i class="fas fa-user fa-3x text-white"></i>
+                                        </div>
+                                    {% endif %}
+                                    <h5 class="text-white">{{ vendor_profile.user.full_name }}</h5>
+                                    <p class="text-secondary">{{ vendor_profile.user.email }}</p>
+                                </div>
+                                <div class="col-md-8">
+                                    <div class="row">
+                                        <div class="col-sm-6">
+                                            <p class="text-white"><strong>Store Name:</strong><br>{{ vendor_profile.store_name }}</p>
+                                            <p class="text-white"><strong>Business Email:</strong><br>{{ vendor_profile.business_email }}</p>
+                                            <p class="text-white"><strong>Business Phone:</strong><br>{{ vendor_profile.business_phone|default:"Not provided" }}</p>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <p class="text-white"><strong>Mobile Number:</strong><br>{{ vendor_profile.user.mobile_number|default:"Not provided" }}</p>
+                                            <p class="text-white"><strong>Account Created:</strong><br>{{ vendor_profile.user.date_joined|date:"M d, Y" }}</p>
+                                            <p class="text-white"><strong>Profile Created:</strong><br>{{ vendor_profile.created_at|date:"M d, Y" }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- KYC Documents -->
+                    <div class="card shadow mb-4" style="background: #121212; border: 1px solid #333;">
+                        <div class="card-header py-3" style="background: #1a1a1a; border-bottom: 1px solid #333;">
+                            <h6 class="m-0 font-weight-bold text-white">
+                                <i class="fas fa-file-alt me-2"></i>KYC Documents
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card mb-3" style="background: #1a1a1a; border: 1px solid #333;">
+                                        <div class="card-body">
+                                            <h6 class="text-white">PAN Information</h6>
+                                            <p class="text-white"><strong>PAN Number:</strong> {{ vendor_profile.pan|slice:":4" }}****</p>
+                                            {% if vendor_profile.kyc.pan_document %}
+                                                <a href="{{ vendor_profile.kyc.pan_document.url }}" target="_blank" 
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye me-1"></i>View PAN Document
+                                                </a>
+                                            {% else %}
+                                                <span class="badge bg-danger">Document Missing</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card mb-3" style="background: #1a1a1a; border: 1px solid #333;">
+                                        <div class="card-body">
+                                            <h6 class="text-white">GSTIN Information</h6>
+                                            {% if vendor_profile.gstin %}
+                                                <p class="text-white"><strong>GSTIN Number:</strong> {{ vendor_profile.gstin|slice:":4" }}****</p>
+                                            {% else %}
+                                                <p class="text-white"><strong>GSTIN Number:</strong> Not provided</p>
+                                            {% endif %}
+                                            {% if vendor_profile.kyc.gstin_document %}
+                                                <a href="{{ vendor_profile.kyc.gstin_document.url }}" target="_blank" 
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye me-1"></i>View GSTIN Document
+                                                </a>
+                                            {% else %}
+                                                <span class="badge bg-warning text-dark">Document Optional</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Store Address -->
+                    <div class="card shadow mb-4" style="background: #121212; border: 1px solid #333;">
+                        <div class="card-header py-3" style="background: #1a1a1a; border-bottom: 1px solid #333;">
+                            <h6 class="m-0 font-weight-bold text-white">
+                                <i class="fas fa-map-marker-alt me-2"></i>Store Address
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            {% if vendor_profile.store_address %}
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <p class="text-white"><strong>Address Line 1:</strong> {{ vendor_profile.store_address.line1|default:"Not provided" }}</p>
+                                        <p class="text-white"><strong>Address Line 2:</strong> {{ vendor_profile.store_address.line2|default:"Not provided" }}</p>
+                                        <p class="text-white"><strong>City:</strong> {{ vendor_profile.store_address.city|default:"Not provided" }}</p>
+                                        <p class="text-white"><strong>State:</strong> {{ vendor_profile.store_address.state|default:"Not provided" }}</p>
+                                        <p class="text-white"><strong>Pincode:</strong> {{ vendor_profile.store_address.pincode|default:"Not provided" }}</p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <p class="text-white"><strong>Coordinates:</strong></p>
+                                        <p class="text-secondary">Lat: {{ vendor_profile.store_address.latitude|default:"Not provided" }}</p>
+                                        <p class="text-secondary">Lng: {{ vendor_profile.store_address.longitude|default:"Not provided" }}</p>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <p class="text-secondary">No store address provided.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Approval Panel -->
+                <div class="col-lg-4">
+                    <div class="card shadow mb-4" style="background: #121212; border: 1px solid #333;">
+                        <div class="card-header py-3" style="background: #1a1a1a; border-bottom: 1px solid #333;">
+                            <h6 class="m-0 font-weight-bold text-white">
+                                <i class="fas fa-gavel me-2"></i>KYC Decision
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            {% if kyc_approval.status == 'pending' %}
+                                <form method="post">
+                                    {% csrf_token %}
+                                    <div class="mb-3">
+                                        <label for="adminNotes" class="form-label text-white">Admin Notes (Optional):</label>
+                                        <textarea class="form-control bg-dark text-white" id="adminNotes" name="admin_notes" rows="3" 
+                                                  placeholder="Add any internal notes...">{{ kyc_approval.admin_notes|default:"" }}</textarea>
+                                    </div>
+                                    
+                                    <div class="d-grid gap-2">
+                                        <button type="submit" name="action" value="approve" class="btn btn-success btn-lg">
+                                            <i class="fas fa-check me-2"></i>Approve KYC
+                                        </button>
+                                        <button type="button" class="btn btn-danger btn-lg" onclick="showRejectModal()">
+                                            <i class="fas fa-times me-2"></i>Reject KYC
+                                        </button>
+                                    </div>
+                                </form>
+                            {% else %}
+                                <div class="text-center">
+                                    {% if kyc_approval.status == 'approved' %}
+                                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                                        <h5 class="text-success">KYC Approved</h5>
+                                    {% else %}
+                                        <i class="fas fa-times-circle fa-3x text-danger mb-3"></i>
+                                        <h5 class="text-danger">KYC Rejected</h5>
+                                    {% endif %}
+                                    
+                                    <p class="text-secondary">Reviewed by: {{ kyc_approval.admin_user.full_name }}</p>
+                                    <p class="text-secondary">Date: {{ kyc_approval.reviewed_at|date:"M d, Y at g:i A" }}</p>
+                                    
+                                    {% if kyc_approval.rejection_reason %}
+                                        <div class="mt-3">
+                                            <h6 class="text-white">Rejection Reason:</h6>
+                                            <p class="text-muted">{{ kyc_approval.rejection_reason }}</p>
+                                        </div>
+                                    {% endif %}
+                                    
+                                    {% if kyc_approval.admin_notes %}
+                                        <div class="mt-3">
+                                            <h6 class="text-white">Admin Notes:</h6>
+                                            <p class="text-muted">{{ kyc_approval.admin_notes }}</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="card shadow mb-4" style="background: #121212; border: 1px solid #333;">
+                        <div class="card-header py-3" style="background: #1a1a1a; border-bottom: 1px solid #333;">
+                            <h6 class="m-0 font-weight-bold text-white">
+                                <i class="fas fa-bolt me-2"></i>Quick Actions
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'kyc_management:pending_list' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-list me-2"></i>View All Pending
+                                </a>
+                                <a href="{% url 'kyc_management:dashboard' %}" class="btn btn-outline-info">
+                                    <i class="fas fa-tachometer-alt me-2"></i>KYC Dashboard
+                                </a>
+                                <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-warning">
+                                    <i class="fas fa-arrow-left me-2"></i>Admin Dashboard
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Rejection Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content" style="background: #121212; border: 1px solid #333;">
+            <div class="modal-header" style="background: #1a1a1a; border-bottom: 1px solid #333;">
+                <h5 class="modal-title text-white">
+                    <i class="fas fa-times-circle text-danger me-2"></i>Reject KYC Application
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p class="text-white">Please provide a reason for rejection:</p>
+                    <div class="form-group">
+                        <label for="rejectionReason" class="text-white">Rejection Reason *:</label>
+                        <textarea class="form-control bg-dark text-white" id="rejectionReason" name="rejection_reason" rows="3" 
+                                  placeholder="Please specify why this KYC application is being rejected..." required></textarea>
+                    </div>
+                    <div class="form-group mt-3">
+                        <label for="adminNotesModal" class="text-white">Admin Notes (Optional):</label>
+                        <textarea class="form-control bg-dark text-white" id="adminNotesModal" name="admin_notes" rows="2" 
+                                  placeholder="Add any internal notes...">{{ kyc_approval.admin_notes|default:"" }}</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid #333;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" name="action" value="reject" class="btn btn-danger">
+                        <i class="fas fa-times me-2"></i>Reject KYC
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function showRejectModal() {
+    new bootstrap.Modal(document.getElementById('rejectModal')).show();
+}
+</script>
+{% endblock %} 

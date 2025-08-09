@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Resend Activation | KABAADWALA™{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card p-4" style="background:#121212;">
+                <h2 class="mb-4 text-center" style="color:#6BFF57;">Resend Activation Email</h2>
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form.non_field_errors }}
+                    <div class="mb-3">
+                        <label for="id_email" class="form-label">Email</label>
+                        <input type="email" class="form-control" name="email" id="id_email" required>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100" style="background:#6BFF57;color:#0B0B0F;">Resend</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,246 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block dashboard_content %}
+
+<!-- KYC Warning Banner -->
+{% if vendor_profile.kyc_status != 'approved' %}
+  <div class="alert alert-warning d-flex align-items-center mb-4" style="background:rgba(255,193,7,0.1);backdrop-filter:blur(8px);border-radius:16px;color:#fff;border:1px solid #ffc107;font-size:1.1rem;">
+    <i class="bi bi-exclamation-triangle-fill me-3" style="font-size:1.6rem;color:#ffc107;"></i>
+    <div>
+      <strong>KYC Verification Required!</strong> 
+      {% if vendor_profile.kyc_status == 'pending' %}
+        Your KYC is under review. You can still browse but selling features are disabled until approval.
+      {% elif vendor_profile.kyc_status == 'rejected' %}
+        Your KYC was rejected. Please update your documents and resubmit.
+      {% endif %}
+    </div>
+  </div>
+{% endif %}
+
+<div class="row g-4">
+  <!-- Store Info Card -->
+  <div class="col-md-6 col-lg-4">
+    <div class="card shadow-sm glass-card" style="background:rgba(24,24,28,0.85); color:#fff; border-radius:18px;">
+      <div class="card-body">
+        <h5 class="card-title" style="color:#6BFF57;">Store Info</h5>
+        <div class="d-flex align-items-center mb-3">
+          <img src="{% if vendor_profile.store_logo %}{{ vendor_profile.store_logo.url }}{% else %}data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23C7C7C7'%3E%3Cpath d='M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z'/%3E%3C/svg%3E{% endif %}" alt="Store" class="rounded-circle me-3" width="48" height="48" style="object-fit:cover;">
+          <div>
+            <h6 class="mb-1">{{ vendor_profile.store_name }}</h6>
+            <small class="text-muted">{{ vendor_profile.business_email }}</small>
+          </div>
+        </div>
+        <p class="card-text mb-2">
+          <i class="bi bi-geo-alt me-2"></i>
+          {% if vendor_profile.store_address.city and vendor_profile.store_address.state %}
+            {{ vendor_profile.store_address.city }}, {{ vendor_profile.store_address.state }}
+          {% else %}
+            Address not set
+          {% endif %}
+        </p>
+        <div class="mb-2">
+          <span class="badge bg-{% if vendor_profile.kyc_status == 'approved' %}success{% elif vendor_profile.kyc_status == 'pending' %}warning{% else %}danger{% endif %}">
+            KYC: {{ vendor_profile.kyc_status|title }}
+          </span>
+        </div>
+        <a href="{% url 'profile_setup' %}" class="btn btn-outline-success btn-sm">Edit Store</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Wallet Card -->
+  <div class="col-md-6 col-lg-4">
+    <div class="card shadow-sm glass-card {% if vendor_profile.kyc_status != 'approved' %}disabled-card{% endif %}" style="background:rgba(24,24,28,0.85); color:#fff; border-radius:18px;">
+      <div class="card-body">
+        <h5 class="card-title" style="color:#6BFF57;">Wallet</h5>
+        {% if wallet %}
+          <div class="display-6 fw-bold mb-3" style="color:#6BFF57;">₹{{ wallet.current_balance|floatformat:2 }}</div>
+          <div class="row text-center mb-3">
+            <div class="col">
+              <div class="fw-bold">₹{{ wallet.total_recharged|floatformat:2 }}</div>
+              <small class="text-muted">Total Recharged</small>
+            </div>
+            <div class="col">
+              <div class="fw-bold">₹{{ wallet.held_amount|floatformat:2 }}</div>
+              <small class="text-muted">Held Amount</small>
+            </div>
+          </div>
+          <div class="d-grid gap-2">
+            <a href="#" class="btn btn-success btn-sm">Withdraw Funds</a>
+            <a href="#" class="btn btn-outline-success btn-sm">View Transactions</a>
+          </div>
+        {% else %}
+          <div class="text-center py-4">
+            <i class="bi bi-wallet2" style="font-size:3rem; color:#6BFF57;"></i>
+            <p class="mt-3 text-muted">Wallet not available</p>
+            <a href="#" class="btn btn-success btn-sm">Setup Wallet</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- KYC Status Card -->
+  <div class="col-md-12 col-lg-4">
+    <div class="card shadow-sm glass-card" style="background:rgba(24,24,28,0.85); color:#fff; border-radius:18px;">
+      <div class="card-body">
+        <h5 class="card-title" style="color:#6BFF57;">KYC Status</h5>
+        <div class="mb-3">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span>PAN Number:</span>
+            <span class="badge bg-{% if vendor_profile.pan %}success{% else %}danger{% endif %}">
+              {% if vendor_profile.pan %}✓ {{ vendor_profile.pan|slice:":4" }}****{% else %}✗ Missing{% endif %}
+            </span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span>GSTIN:</span>
+            <span class="badge bg-{% if vendor_profile.gstin %}success{% else %}danger{% endif %}">
+              {% if vendor_profile.gstin %}✓ {{ vendor_profile.gstin|slice:":4" }}****{% else %}✗ Missing{% endif %}
+            </span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span>PAN Document:</span>
+            <span class="badge bg-{% if vendor_profile.kyc.pan_document %}success{% else %}danger{% endif %}">
+              {% if vendor_profile.kyc.pan_document %}✓ Uploaded{% else %}✗ Missing{% endif %}
+            </span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span>GSTIN Document:</span>
+            <span class="badge bg-{% if vendor_profile.kyc.gstin_document %}success{% else %}warning{% endif %}">
+              {% if vendor_profile.kyc.gstin_document %}✓ Uploaded{% else %}⚠ Optional{% endif %}
+            </span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span>Store Address:</span>
+            <span class="badge bg-{% if vendor_profile.store_address.city and vendor_profile.store_address.state %}success{% else %}danger{% endif %}">
+              {% if vendor_profile.store_address.city and vendor_profile.store_address.state %}✓ Complete{% else %}✗ Missing{% endif %}
+            </span>
+          </div>
+        </div>
+        <div class="text-center">
+          <span class="badge bg-{% if vendor_profile.kyc_status == 'approved' %}success{% elif vendor_profile.kyc_status == 'pending' %}warning{% else %}danger{% endif %} fs-6">
+            {{ vendor_profile.kyc_status|title }}
+          </span>
+        </div>
+        {% if vendor_profile.kyc_status != 'approved' %}
+          <a href="{% url 'profile_setup' %}" class="btn btn-warning btn-sm w-100 mt-2">Complete KYC</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Analytics Card -->
+  <div class="col-12">
+    <div class="card shadow-sm glass-card {% if vendor_profile.kyc_status != 'approved' %}disabled-card{% endif %}" style="background:rgba(24,24,28,0.85); color:#fff; border-radius:18px;">
+      <div class="card-body">
+        <h5 class="card-title" style="color:#6BFF57;">Analytics</h5>
+        <div class="row text-center">
+          <div class="col-md-3 mb-3">
+            <div class="display-6 fw-bold" style="color:#6BFF57;">{{ total_orders }}</div>
+            <div class="text-muted">Total Orders</div>
+          </div>
+          <div class="col-md-3 mb-3">
+            <div class="display-6 fw-bold" style="color:#6BFF57;">₹{{ total_revenue|floatformat:2 }}</div>
+            <div class="text-muted">Total Revenue</div>
+          </div>
+          <div class="col-md-3 mb-3">
+            <div class="display-6 fw-bold" style="color:#6BFF57;">{{ total_customers }}</div>
+            <div class="text-muted">Customers</div>
+          </div>
+          <div class="col-md-3 mb-3">
+            <div class="display-6 fw-bold" style="color:#6BFF57;">0</div>
+            <div class="text-muted">Products</div>
+          </div>
+        </div>
+        <div class="d-flex gap-2 justify-content-center">
+          <a href="#" class="btn btn-success btn-sm">Add Product</a>
+          <a href="#" class="btn btn-outline-success btn-sm">View Orders</a>
+          <a href="#" class="btn btn-outline-success btn-sm">Analytics</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Transactions -->
+  <div class="col-12">
+    <div class="card shadow-sm glass-card" style="background:rgba(24,24,28,0.85); color:#fff; border-radius:18px;">
+      <div class="card-body">
+        <h5 class="card-title" style="color:#6BFF57;">Recent Transactions</h5>
+        {% if wallet and recent_transactions %}
+          <div class="table-responsive">
+            <table class="table table-dark table-hover">
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for transaction in recent_transactions %}
+                <tr>
+                  <td>
+                    <span class="badge bg-{% if transaction.transaction_type == 'recharge' %}success{% elif transaction.transaction_type == 'deduct' %}danger{% else %}warning{% endif %}">
+                      {{ transaction.transaction_type|title }}
+                    </span>
+                  </td>
+                  <td>₹{{ transaction.amount|floatformat:2 }}</td>
+                  <td>
+                    <span class="badge bg-{% if transaction.status == 'completed' %}success{% elif transaction.status == 'pending' %}warning{% else %}danger{% endif %}">
+                      {{ transaction.status|title }}
+                    </span>
+                  </td>
+                  <td>{{ transaction.created_at|date:"M d, Y" }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="text-center py-4">
+            <i class="bi bi-wallet2" style="font-size:3rem; color:#6BFF57;"></i>
+            <p class="mt-3 text-muted">
+              {% if not wallet %}
+                Wallet not available
+              {% else %}
+                No transactions yet
+              {% endif %}
+            </p>
+            <a href="#" class="btn btn-success btn-sm">
+              {% if not wallet %}
+                Setup Wallet
+              {% else %}
+                Start Selling
+              {% endif %}
+            </a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .glass-card {
+    box-shadow: 0 4px 32px 0 rgba(0,0,0,0.18);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(107,255,87,0.12);
+  }
+  .disabled-card {
+    opacity: 0.5;
+    pointer-events: none;
+    filter: grayscale(0.7);
+  }
+  .table-dark {
+    background: transparent;
+    color: #fff;
+  }
+  .table-dark th {
+    border-color: #23232A;
+    color: #6BFF57;
+  }
+  .table-dark td {
+    border-color: #23232A;
+  }
+</style>
+{% endblock %} 
