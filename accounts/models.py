@@ -77,6 +77,7 @@ class Address(models.Model):
     flat_number = models.CharField(max_length=100, blank=True)
     street_address = models.TextField()
     landmark = models.CharField(max_length=255, blank=True)
+    area = models.CharField(max_length=100, help_text='Locality/Area name')
     city = models.CharField(max_length=100)
     pincode = models.CharField(max_length=10)
     state = models.CharField(max_length=100)
@@ -84,8 +85,23 @@ class Address(models.Model):
     latitude = models.DecimalField(max_digits=10, decimal_places=8, blank=True, null=True)
     longitude = models.DecimalField(max_digits=11, decimal_places=8, blank=True, null=True)
     is_default = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-is_default', '-created_at']
+        verbose_name = 'Address'
+        verbose_name_plural = 'Addresses'
+
+    def save(self, *args, **kwargs):
+        # If this address is being set as default, unset default for other addresses
+        if self.is_default:
+            Address.objects.filter(user=self.user).exclude(id=self.id).update(is_default=False)
+        # If this is the user's first address, make it default
+        elif not self.id and not Address.objects.filter(user=self.user).exists():
+            self.is_default = True
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.recipient_name} - {self.city}"
@@ -93,6 +109,7 @@ class Address(models.Model):
 class VendorProfile(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='vendor_profile')
+    locations = models.ManyToManyField('products.Location', related_name='vendors', blank=True)
     store_name = models.CharField(max_length=255, unique=True)
     store_logo = models.ImageField(upload_to='store_logos/', blank=True, null=True)
     store_banner = models.ImageField(upload_to='store_banners/', blank=True, null=True)
@@ -132,7 +149,12 @@ class VendorKYC(models.Model):
 
 class Wallet(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='wallet')
+    user = models.OneToOneField(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='accounts_wallet',
+        limit_choices_to={'user_type': 'buyer'}  # Only allow buyers to have wallets
+    )
     current_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     total_recharged = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     total_spent = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
@@ -141,16 +163,25 @@ class Wallet(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        verbose_name = 'Buyer Wallet'
+        verbose_name_plural = 'Buyer Wallets'
+
+    def save(self, *args, **kwargs):
+        # Ensure only buyers can have wallets
+        if self.user.user_type != 'buyer':
+            raise ValueError("Wallets can only be created for buyers")
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return f"Wallet of {self.user.email}"
+        return f"Wallet of {self.user.email} (Buyer)"
 
 class WalletTransaction(models.Model):
     TRANSACTION_TYPE_CHOICES = [
-        ('recharge', 'Recharge'),
-        ('hold', 'Hold'),
-        ('deduct', 'Deduct'),
-        ('release', 'Release'),
-        ('refund', 'Refund'),
+        ('recharge', 'Recharge via Razorpay'),
+        ('hold', 'Hold Amount for Order'),
+        ('deduct', 'Deduct on Delivery'),
+        ('refund', 'Refund to Wallet'),
     ]
     STATUS_CHOICES = [
         ('pending', 'Pending'),
@@ -163,7 +194,9 @@ class WalletTransaction(models.Model):
     transaction_type = models.CharField(max_length=20, choices=TRANSACTION_TYPE_CHOICES)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     order_id = models.UUIDField(blank=True, null=True)
-    payment_gateway_ref = models.CharField(max_length=255, blank=True)
+    razorpay_order_id = models.CharField(max_length=255, blank=True)
+    razorpay_payment_id = models.CharField(max_length=255, blank=True)
+    razorpay_signature = models.CharField(max_length=255, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     description = models.TextField(blank=True)
     balance_before = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
@@ -195,4 +228,4 @@ class PhoneOTP(models.Model):
     is_used = models.BooleanField(default=False)
 
     def is_expired(self):
-        return timezone.now() > self.expires_at 
+        return timezone.now() > self.expires_at

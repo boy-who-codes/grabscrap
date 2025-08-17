@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import location_views
 
 app_name = 'products'
 
@@ -29,4 +30,14 @@ urlpatterns = [
     path('admin/categories/', views.admin_category_list, name='admin_category_list'),
     path('admin/categories/create/', views.admin_category_create, name='admin_category_create'),
     path('admin/categories/edit/<uuid:category_id>/', views.admin_category_edit, name='admin_category_edit'),
-] 
+    path('admin/commissions/', admin_views.category_management, name='category_management'),
+    path('admin/commission-requests/<uuid:request_id>/', admin_views.handle_category_request, name='handle_category_request'),
+    path('admin/update-commissions/', admin_views.update_commission_rates, name='update_commissions'),
+    
+    # Admin location management
+    path('admin/locations/', location_views.location_list, name='admin_location_list'),
+    path('admin/locations/create/', location_views.location_create, name='admin_location_create'),
+    path('admin/locations/edit/<uuid:location_id>/', location_views.location_edit, name='admin_location_edit'),
+    path('admin/locations/<uuid:location_id>/toggle-status/', location_views.location_toggle_status, name='admin_location_toggle_status'),
+    path('admin/locations/map/', location_views.location_map, name='admin_location_map'),
+]

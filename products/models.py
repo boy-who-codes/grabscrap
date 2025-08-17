@@ -4,6 +4,27 @@ from django.utils import timezone
 from accounts.models import User, VendorProfile
 
 
+class Location(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=100)
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
+    country = models.CharField(max_length=100, default='India')
+    latitude = models.DecimalField(max_digits=10, decimal_places=8)
+    longitude = models.DecimalField(max_digits=11, decimal_places=8)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = "Location"
+        verbose_name_plural = "Locations"
+
+    def __str__(self):
+        return f"{self.name}, {self.city}, {self.state}"
+
+
 class Category(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100, unique=True)
@@ -13,8 +34,40 @@ class Category(models.Model):
     is_active = models.BooleanField(default=True)
     sort_order = models.IntegerField(default=0)
     commission_rate = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True, help_text="Commission rate in percentage (overrides global)")
+    requested_vendors = models.ManyToManyField(settings.AUTH_USER_MODEL, through='CategoryRequest', related_name='requested_categories')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def get_effective_commission(self):
+        if self.commission_rate is not None:
+            return self.commission_rate
+        if self.parent_category:
+            return self.parent_category.get_effective_commission()
+        from django.conf import settings
+        return getattr(settings, 'DEFAULT_COMMISSION_RATE', 10.00)
+
+class CategoryRequest(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending Approval'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected')
+    ]
+    
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='requests')
+    vendor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='category_requests')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    request_note = models.TextField(blank=True)
+    requested_at = models.DateTimeField(auto_now_add=True)
+    reviewed_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, 
+                                  on_delete=models.SET_NULL, related_name='reviewed_category_requests')
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    rejection_reason = models.TextField(blank=True)
+
+    class Meta:
+        unique_together = ['category', 'vendor']
+
+    def __str__(self):
+        return f"{self.vendor.email} - {self.category.name}"
 
     class Meta:
         ordering = ['sort_order', 'name']
@@ -65,6 +118,7 @@ class Product(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     views_count = models.PositiveIntegerField(default=0)
     orders_count = models.PositiveIntegerField(default=0)
+    available_locations = models.ManyToManyField(Location, related_name='products', blank=True)
 
     class Meta:
         ordering = ['-created_at']

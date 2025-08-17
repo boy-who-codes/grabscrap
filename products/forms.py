@@ -1,6 +1,6 @@
 from django import forms
 from django.core.exceptions import ValidationError
-from .models import Category, Product, ProductImage, ProductReview
+from .models import Category, Product, ProductImage, ProductReview, Location
 
 
 class CategoryForm(forms.ModelForm):
@@ -69,7 +69,7 @@ class ProductForm(forms.ModelForm):
         fields = [
             'category', 'title', 'description', 'price', 'unit', 
             'stock_quantity', 'minimum_order_quantity', 'is_active', 
-            'is_featured', 'tags', 'specifications'
+            'is_featured', 'tags', 'specifications', 'available_locations'
         ]
         widgets = {
             'category': forms.Select(attrs={
@@ -126,14 +126,19 @@ class ProductForm(forms.ModelForm):
                 'style': 'background:#18181C; color:#fff;',
                 'rows': 3,
                 'placeholder': 'Enter specifications as JSON (optional)'
+            }),
+            'available_locations': forms.SelectMultiple(attrs={
+                'class': 'form-control text-white',
+                'style': 'background:#18181C; color:#fff;'
             })
         }
 
     def __init__(self, *args, **kwargs):
         self.vendor = kwargs.pop('vendor', None)
         super().__init__(*args, **kwargs)
-        # Only show active categories
+        # Only show active categories and locations
         self.fields['category'].queryset = Category.objects.filter(is_active=True)
+        self.fields['available_locations'].queryset = Location.objects.filter(is_active=True)
 
     def clean_price(self):
         price = self.cleaned_data.get('price')
@@ -230,6 +235,62 @@ class ProductReviewForm(forms.ModelForm):
         return rating
 
 
+class LocationForm(forms.ModelForm):
+    class Meta:
+        model = Location
+        fields = ['name', 'city', 'state', 'country', 'latitude', 'longitude', 'is_active']
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'form-control text-white',
+                'style': 'background:#18181C; color:#fff;',
+                'placeholder': 'Enter location name'
+            }),
+            'city': forms.TextInput(attrs={
+                'class': 'form-control text-white',
+                'style': 'background:#18181C; color:#fff;',
+                'placeholder': 'Enter city'
+            }),
+            'state': forms.TextInput(attrs={
+                'class': 'form-control text-white',
+                'style': 'background:#18181C; color:#fff;',
+                'placeholder': 'Enter state/province'
+            }),
+            'country': forms.TextInput(attrs={
+                'class': 'form-control text-white',
+                'style': 'background:#18181C; color:#fff;',
+                'placeholder': 'Enter country'
+            }),
+            'latitude': forms.NumberInput(attrs={
+                'class': 'form-control text-white',
+                'style': 'background:#18181C; color:#fff;',
+                'step': '0.000001',
+                'placeholder': 'Enter latitude'
+            }),
+            'longitude': forms.NumberInput(attrs={
+                'class': 'form-control text-white',
+                'style': 'background:#18181C; color:#fff;',
+                'step': '0.000001',
+                'placeholder': 'Enter longitude'
+            }),
+            'is_active': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
+            })
+        }
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        latitude = cleaned_data.get('latitude')
+        longitude = cleaned_data.get('longitude')
+        
+        if latitude is not None and (latitude < -90 or latitude > 90):
+            self.add_error('latitude', 'Latitude must be between -90 and 90 degrees')
+        
+        if longitude is not None and (longitude < -180 or longitude > 180):
+            self.add_error('longitude', 'Longitude must be between -180 and 180 degrees')
+        
+        return cleaned_data
+
+
 class ProductSearchForm(forms.Form):
     query = forms.CharField(
         max_length=200,
@@ -249,14 +310,21 @@ class ProductSearchForm(forms.Form):
             'style': 'background:#18181C; color:#fff;'
         })
     )
+    location = forms.ModelChoiceField(
+        queryset=Location.objects.filter(is_active=True),
+        required=False,
+        empty_label="All Locations",
+        widget=forms.Select(attrs={
+            'class': 'form-control text-white',
+            'style': 'background:#18181C; color:#fff;'
+        })
+    )
     min_price = forms.DecimalField(
         required=False,
         widget=forms.NumberInput(attrs={
             'class': 'form-control text-white',
             'style': 'background:#18181C; color:#fff;',
-            'placeholder': 'Min price',
-            'step': '0.01',
-            'min': 0
+            'placeholder': 'Min price'
         })
     )
     max_price = forms.DecimalField(
@@ -264,9 +332,7 @@ class ProductSearchForm(forms.Form):
         widget=forms.NumberInput(attrs={
             'class': 'form-control text-white',
             'style': 'background:#18181C; color:#fff;',
-            'placeholder': 'Max price',
-            'step': '0.01',
-            'min': 0
+            'placeholder': 'Max price'
         })
     )
     unit = forms.ChoiceField(
@@ -289,13 +355,3 @@ class ProductSearchForm(forms.Form):
             'class': 'form-check-input'
         })
     )
-
-    def clean(self):
-        cleaned_data = super().clean()
-        min_price = cleaned_data.get('min_price')
-        max_price = cleaned_data.get('max_price')
-        
-        if min_price and max_price and min_price > max_price:
-            raise ValidationError('Minimum price cannot be greater than maximum price.')
-        
-        return cleaned_data 

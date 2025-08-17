@@ -13,10 +13,10 @@
     {% else %}
         <div class="row">
             <div class="col-md-6">
-                <a href="{% url 'signup' %}" class="btn btn-primary btn-block mb-2">Sign Up</a>
+                <a href="{% url 'accounts:signup' %}" class="btn btn-primary btn-block mb-2">Sign Up</a>
             </div>
             <div class="col-md-6">
-                <a href="{% url 'login' %}" class="btn btn-secondary btn-block mb-2">Login</a>
+                <a href="{% url 'accounts:login' %}" class="btn btn-secondary btn-block mb-2">Login</a>
             </div>
         </div>
     {% endif %}

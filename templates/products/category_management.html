@@ -1,0 +1,31 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block content %}
+<div class="dashboard-card">
+  <h3>Category Commission Management</h3>
+  <div class="category-tree">
+    {% for category in categories %}
+      {% include 'products/_category_commission_node.html' with category=category %}
+    {% endfor %}
+  </div>
+</div>
+
+<div class="dashboard-card">
+  <h3>Pending Category Requests</h3>
+  <div class="request-list">
+    {% for request in pending_requests %}
+    <div class="request-item">
+      <div class="request-header">
+        <span class="badge badge-warning">{{ request.get_status_display }}</span>
+        <strong>{{ request.vendor.store_name }}</strong> requests:
+        "{{ request.category.name }}"
+      </div>
+      <div class="request-actions">
+        <a href="{% url 'handle_category_request' request.id %}" class="btn btn-sm btn-primary">Review</a>
+      </div>
+    </div>
+    {% empty %}
+    <div class="alert alert-info">No pending category requests</div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

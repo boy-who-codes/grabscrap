@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}Test Email - KABAADWALA™{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">Test Email Sending</h4>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email Address</label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   value="{{ request.user.email if request.user.is_authenticated else '' }}" 
+                                   required />
+                            <div class="form-text">Enter the email address where you want to send the test email.</div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-paper-plane me-2"></i>Send Test Email
+                            </button>
+                            <a href="{% url 'home:index' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Home
+                            </a>
+                        </div>
+                    </form>
+                    
+                    {% if settings.DEBUG %}
+                        <div class="alert alert-info mt-4">
+                            <h5>Debug Information</h5>
+                            <p><strong>Email Backend:</strong> {{ settings.EMAIL_BACKEND }}</p>
+                            <p><strong>Email Host:</strong> {{ settings.EMAIL_HOST }}:{{ settings.EMAIL_PORT }}</p>
+                            <p><strong>Email TLS:</strong> {{ settings.EMAIL_USE_TLS|yesno:"Yes,No" }}</p>
+                            <p><strong>From Email:</strong> {{ settings.DEFAULT_FROM_EMAIL }}</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -20,6 +20,7 @@ def product_list(request):
     if search_form.is_valid():
         query = search_form.cleaned_data.get('query')
         category = search_form.cleaned_data.get('category')
+        location = search_form.cleaned_data.get('location')
         min_price = search_form.cleaned_data.get('min_price')
         max_price = search_form.cleaned_data.get('max_price')
         unit = search_form.cleaned_data.get('unit')
@@ -70,19 +71,24 @@ def product_list(request):
         
         if featured_only:
             products = products.filter(is_featured=True)
+            
+        if location:
+            products = products.filter(available_locations=location)
     
     # Pagination
     paginator = Paginator(products, 12)  # 12 products per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    # Get categories for sidebar
+    # Get categories and locations for sidebar
     categories = Category.objects.filter(is_active=True)
+    locations = Location.objects.filter(is_active=True)
     
     context = {
         'page_obj': page_obj,
         'search_form': search_form,
         'categories': categories,
+        'locations': locations,
         'total_products': products.count(),
     }
     

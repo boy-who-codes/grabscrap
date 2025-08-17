@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'django_celery_beat',
     'channels',
     'wallet',
+    'chat',
 ]
 
 MIDDLEWARE = [
@@ -108,14 +109,26 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Email configuration
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' if DEBUG else 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = env('EMAIL_HOST', default='smtp.example.com')
-EMAIL_PORT = env('EMAIL_PORT', default=587)
-EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
-EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
-EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=True)
-DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='noreply@example.com')
+# Email Configuration
+if DEBUG:
+    # For development, log emails to console
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+else:
+    # For production, use SMTP
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = env('EMAIL_HOST', default='smtp.gmail.com')
+    EMAIL_PORT = env.int('EMAIL_PORT', default=587)
+    EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=True)
+    EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
+    EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
+    DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='noreply@kabaadwala.com')
+    
+    # If using Gmail, you might need to enable Less Secure Apps or use App Passwords
+    # https://support.google.com/accounts/answer/185833?hl=en
+
+# OTP Configuration
+OTP_LENGTH = env.int('OTP_LENGTH', default=6)
+OTP_EXPIRY_SECONDS = env.int('OTP_EXPIRY_SECONDS', default=300)  # 5 minutes
 
 # Celery configuration
 CELERY_BROKER_URL = env('CELERY_BROKER_URL', default='redis://localhost:6379/0')
@@ -151,4 +164,7 @@ LOGGING = {
 }
 
 # Default primary key field type
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField' 
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Google Maps API Configuration
+GOOGLE_MAPS_API_KEY = env('GOOGLE_MAPS_API_KEY', default='')

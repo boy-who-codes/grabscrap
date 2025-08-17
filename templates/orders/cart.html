@@ -43,11 +43,11 @@
                                                 {% endif %}
                                                 <div>
                                                     <h6 style="color:#FFFFFF;">{{ item.product.title }}</h6>
-                                                    <small class="text-muted">
+                                                    <small>
                                                         <i class="bi bi-shop"></i> {{ item.product.vendor.store_name }}
                                                     </small>
                                                     <br>
-                                                    <small class="text-muted">
+                                                    <small>
                                                         SKU: {{ item.product.sku }}
                                                     </small>
                                                 </div>
@@ -62,7 +62,7 @@
                                                        min="{{ item.product.minimum_order_quantity }}" 
                                                        max="{{ item.product.stock_quantity }}"
                                                        class="form-control form-control-sm me-2"
-                                                       style="background:#0B0B0F; border:1px solid #333; color:#FFFFFF;">
+                                                       style="background:#0B0B0F; border:1px solid #333; color:#FFFFFF;" />
                                                 <button type="submit" class="btn btn-outline-success btn-sm">
                                                     <i class="bi bi-arrow-clockwise"></i>
                                                 </button>
@@ -227,4 +227,4 @@ $('form[action*="remove_from_cart"]').submit(function(e) {
     }
 });
 </script>
-{% endblock %} 
+{% endblock %}

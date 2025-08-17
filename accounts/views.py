@@ -1,7 +1,9 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.views.decorators.http import require_http_methods
+from django.conf import settings
 from django.contrib import messages
 from django.conf import settings
 from .models import User, OTP, PhoneOTP, VendorProfile, VendorKYC, Wallet, WalletTransaction
@@ -9,7 +11,7 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.contrib.auth.tokens import default_token_generator
 from django.template.loader import render_to_string
-from django.core.mail import EmailMultiAlternatives
+from django.core.mail import EmailMultiAlternatives, send_mail
 from django import forms
 import logging
 from django.urls import reverse
@@ -23,8 +25,31 @@ from django.http import JsonResponse
 try:
     from .tasks import send_email_task
 except ImportError:
-    def send_email_task(*args, **kwargs):
-        pass
+    def send_email_task(subject, recipient_list, template_name, context=None, from_email=None, **kwargs):
+        """
+        Send an email using Django's email backend
+        """
+        if context is None:
+            context = {}
+        
+        # Get the email content from template
+        html_content = render_to_string(template_name, context)
+        
+        # Create the email
+        msg = EmailMultiAlternatives(
+            subject=subject,
+            body=html_content,  # Fallback text content
+            from_email=from_email or settings.DEFAULT_FROM_EMAIL,
+            to=recipient_list if isinstance(recipient_list, list) else [recipient_list],
+        )
+        msg.attach_alternative(html_content, "text/html")
+        
+        try:
+            msg.send()
+            return True
+        except Exception as e:
+            logger.error(f"Failed to send email: {str(e)}")
+            return False
 
 class SignupForm(forms.Form):
     user_type = forms.ChoiceField(choices=[('buyer', 'Buyer'), ('vendor', 'Vendor')], widget=forms.RadioSelect)
@@ -78,11 +103,11 @@ def signup(request):
     if request.user.is_authenticated:
         user = request.user
         if user.user_type == 'vendor':
-            return redirect(reverse('vendor_dashboard'))
+            return redirect('accounts:vendor_dashboard')
         elif user.user_type == 'admin':
-            return redirect(reverse('admin_dashboard'))
+            return redirect('accounts:admin_dashboard')
         else:
-            return redirect(reverse('user_dashboard'))
+            return redirect('accounts:user_dashboard')
     if request.method == 'POST':
         form = SignupForm(request.POST)
         if form.is_valid():
@@ -111,7 +136,7 @@ def signup(request):
             
             send_activation_email(request, user)
             messages.success(request, 'Signup successful! Please check your email to activate your account.')
-            return redirect('confirmation_mail_sent')
+            return redirect('accounts:confirmation_mail_sent')
     else:
         form = SignupForm()
     return render(request, 'accounts/signup.html', {'form': form})
@@ -129,7 +154,7 @@ def activate(request, uidb64, token):
         user.is_verified = True
         user.save()
         messages.success(request, 'Your email has been verified. You can now log in.')
-        return redirect('login')
+        return redirect('accounts:login')
     else:
         return HttpResponse('Activation link is invalid!', status=400)
 
@@ -165,24 +190,51 @@ def login_view(request):
                 if not user.is_verified:
                     send_activation_email(request, user)
                     messages.error(request, 'Your email is not verified. A new activation email has been sent.')
-                    return redirect('login')
+                    return redirect('accounts:login')
                 # Generate OTP and send via email
                 otp_code = generate_otp_code()
                 expires_at = timezone.now() + timezone.timedelta(minutes=10)
                 OTP.objects.create(user=user, code=otp_code, expires_at=expires_at)
+                
+                # In development, show OTP in alert and console
+                if settings.DEBUG:
+                    print(f'\n\n=== DEVELOPMENT MODE: OTP for {user.email} is {otp_code} ===\n\n')
+                    messages.info(request, f'DEVELOPMENT MODE: Your OTP is {otp_code}. This would be sent via email in production.')
+                
                 # Send OTP via email (Celery)
                 subject = 'Your KABAADWALA™ Login OTP'
                 context = {'user': user, 'otp_code': otp_code}
+                
+                # Log the OTP for debugging
+                print(f'\n\n=== OTP for {user.email} is {otp_code} ===\n\n')
+                
                 try:
+                    # Try Celery async
                     send_email_task.delay(subject, user.email, 'email/otp_email.html', context)
-                except Exception:
-                    # Fallback to sync
-                    html_content = render_to_string('email/otp_email.html', context)
-                    msg = EmailMultiAlternatives(subject, '', settings.DEFAULT_FROM_EMAIL, [user.email])
-                    msg.attach_alternative(html_content, 'text/html')
-                    msg.send()
+                    print(f'Email sent via Celery to {user.email}')
+                except Exception as e:
+                    print(f'Celery task failed: {e}')
+                    try:
+                        # Fallback to sync email sending
+                        html_content = render_to_string('email/otp_email.html', context)
+                        msg = EmailMultiAlternatives(
+                            subject=subject,
+                            body='',
+                            from_email=settings.DEFAULT_FROM_EMAIL,
+                            to=[user.email],
+                            reply_to=[settings.DEFAULT_FROM_EMAIL]
+                        )
+                        msg.attach_alternative(html_content, 'text/html')
+                        msg.send(fail_silently=False)
+                        print(f'Email sent synchronously to {user.email}')
+                    except Exception as email_error:
+                        print(f'Failed to send email: {email_error}')
+                        messages.error(request, 'Failed to send OTP email. Please try again.')
+                        return redirect('accounts:login')
+                
+                # Store user ID in session for OTP verification
                 request.session['otp_user_id'] = str(user.id)
-                messages.success(request, 'An OTP has been sent to your email. Please enter it to continue.')
+                request.session['otp_email_sent'] = True
                 return redirect('accounts:otp_verify')
             else:
                 messages.error(request, 'Invalid email or password.')
@@ -193,7 +245,89 @@ def login_view(request):
 # The rest of the views remain as placeholders or simple renders for now
 
 def phone_verify(request):
-    return render(request, 'accounts/phone_verify.html')
+    """
+    View for phone verification landing page
+    """
+    if not request.user.is_authenticated:
+        return redirect('accounts:login')
+    return render(request, 'accounts/phone_verify.html', {'user': request.user})
+
+def verify_phone_otp(request):
+    """
+    View for verifying phone OTP
+    """
+    if not request.user.is_authenticated:
+        return redirect('accounts:login')
+    
+    if request.method == 'POST':
+        otp_code = request.POST.get('otp_code')
+        phone = request.POST.get('phone')
+        
+        # Verify OTP
+        otp = PhoneOTP.objects.filter(
+            user=request.user,
+            phone_number=phone,
+            code=otp_code,
+            is_used=False,
+            expires_at__gte=timezone.now()
+        ).first()
+        
+        if otp:
+            otp.is_used = True
+            otp.save()
+            
+            # Update user's phone verification status
+            request.user.phone_verified = True
+            request.user.phone_number = phone
+            request.user.save()
+            
+            messages.success(request, 'Phone number verified successfully!')
+            return redirect('accounts:profile_setup')
+        else:
+            messages.error(request, 'Invalid or expired OTP code')
+    
+    return render(request, 'accounts/verify_phone_otp.html', {'user': request.user})
+
+@require_http_methods(["GET", "POST"])
+def test_email(request):
+    """
+    Test email functionality by sending a test email
+    Only available in DEBUG mode
+    """
+    if not settings.DEBUG:
+        return HttpResponse("Test email endpoint is only available in DEBUG mode", status=403)
+    
+    if request.method == 'POST':
+        email = request.POST.get('email', request.user.email if request.user.is_authenticated else None)
+        if not email:
+            messages.error(request, 'Please provide an email address')
+            return redirect('accounts:test_email')
+        
+        context = {
+            'user': request.user if request.user.is_authenticated else None,
+            'test_message': 'This is a test email from KABAADWALA™'
+        }
+        
+        try:
+            # Try to send the email
+            success = send_email_task(
+                subject='Test Email from KABAADWALA™',
+                recipient_list=[email],
+                template_name='email/test_email.html',
+                context=context
+            )
+            
+            if success:
+                messages.success(request, f'Test email sent to {email}')
+            else:
+                messages.error(request, 'Failed to send test email. Check server logs for details.')
+                
+        except Exception as e:
+            messages.error(request, f'Error sending test email: {str(e)}')
+            
+        return redirect('accounts:test_email')
+    
+    return render(request, 'accounts/test_email.html')
 
 def otp_verify(request):
     class OTPForm(forms.Form):
@@ -201,7 +335,7 @@ def otp_verify(request):
     user_id = request.session.get('otp_user_id')
     if not user_id:
         messages.error(request, 'Session expired. Please log in again.')
-        return redirect('login')
+        return redirect('accounts:login')
     try:
         user = User.objects.get(id=user_id)
     except User.DoesNotExist:
@@ -229,11 +363,11 @@ def otp_verify(request):
                 
                 # Otherwise, redirect based on user type and profile completion
                 if not is_profile_complete(user):
-                    return redirect('profile_setup')
+                    return redirect('accounts:profile_setup')
                 elif user.is_superuser:
-                    return redirect(reverse('admin_dashboard') or 'home:index')
+                    return redirect('accounts:admin_dashboard')
                 elif user.user_type == 'vendor':
-                    return redirect(reverse('vendor_dashboard') or 'home:index')
+                    return redirect('accounts:vendor_dashboard')
                 else:
                     return redirect('home:index')  # Default to home
             else:
@@ -322,6 +456,58 @@ def send_sms_otp(phone_number, code):
     # For dev, print to console
     print(f"[DEV] Sending OTP {code} to phone {phone_number}")
     # TODO: Add async SMS sending (Celery) and fallback
+
+@login_required
+def wallet_dashboard(request):
+    """
+    View for wallet dashboard showing balance and recent transactions
+    """
+    wallet = request.user.accounts_wallet
+    transactions = wallet.transactions.all().order_by('-created_at')[:10]
+    return render(request, 'accounts/wallet_dashboard.html', {
+        'wallet': wallet,
+        'transactions': transactions
+    })
+
+@login_required
+@require_http_methods(["POST"])
+def wallet_recharge(request):
+    """
+    View for handling wallet recharge requests
+    """
+    amount = Decimal(request.POST.get('amount', 0))
+    if amount <= 0:
+        messages.error(request, 'Invalid recharge amount')
+        return redirect('accounts:wallet_dashboard')
+    
+    wallet = request.user.accounts_wallet
+    try:
+        # Create transaction record
+        transaction = WalletTransaction.objects.create(
+            wallet=wallet,
+            transaction_type='recharge',
+            amount=amount,
+            status='pending',
+            balance_before=wallet.current_balance
+        )
+        
+        # Process payment (integration with payment gateway would go here)
+        # For now, we'll just update the balance
+        wallet.current_balance += amount
+        wallet.total_recharged += amount
+        wallet.save()
+        
+        # Update transaction status
+        transaction.balance_after = wallet.current_balance
+        transaction.status = 'completed'
+        transaction.processed_at = timezone.now()
+        transaction.save()
+        
+        messages.success(request, f'Successfully recharged ₹{amount} to your wallet')
+    except Exception as e:
+        messages.error(request, f'Recharge failed: {str(e)}')
+        
+    return redirect('accounts:wallet_dashboard')
 
 @csrf_exempt
 def send_phone_otp(request):

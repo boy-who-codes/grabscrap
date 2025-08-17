@@ -62,7 +62,7 @@
                                         <div class="form-check mb-2">
                                             <input class="form-check-input" type="radio" 
                                                    name="shipping_address" value="{{ address.id }}" required
-                                                   {% if forloop.first %}checked{% endif %}>
+                                                   {% if forloop.first %}checked{% endif %} />
                                             <label class="form-check-label">
                                                 {{ address.full_name }}, {{ address.address_line1 }}, 
                                                 {{ address.city }} - {{ address.postal_code }}
@@ -86,7 +86,7 @@
                                 <h6>Payment Method</h6>
                                 <div class="form-check mb-2">
                                     <input class="form-check-input" type="radio" name="payment_method" 
-                                           id="cod" value="cod" checked>
+                                           id="cod" value="cod" checked />
                                     <label class="form-check-label" for="cod">
                                         Cash on Delivery
                                     </label>
@@ -94,7 +94,7 @@
                                 
                                 <div class="form-check mb-2">
                                     <input class="form-check-input" type="radio" name="payment_method" 
-                                           id="razorpay" value="razorpay">
+                                           id="razorpay" value="razorpay" />
                                     <label class="form-check-label" for="razorpay">
                                         Razorpay
                                     </label>
@@ -104,7 +104,7 @@
                                     <div class="form-check">
                                         <input class="form-check-input" type="radio" name="payment_method" 
                                                id="wallet" value="wallet"
-                                               {% if request.user.wallet_balance < cart.total_with_tax %}disabled{% endif %}>
+                                               {% if request.user.wallet_balance < cart.total_with_tax %}disabled{% endif %} />
                                         <label class="form-check-label" for="wallet">
                                             Wallet (₹{{ request.user.wallet_balance|floatformat:2 }})
                                             {% if request.user.wallet_balance < cart.total_with_tax %}

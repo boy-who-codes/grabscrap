@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Location Management{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="text-white mb-0">Location Management</h2>
+                <a href="{% url 'products:location_create' %}" class="btn btn-success">
+                    <i class="bi bi-plus-circle"></i> Add Location
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm glass-card" style="background:rgba(24,24,28,0.85); color:#fff; border-radius:18px;">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-8">
+                            <input type="text" name="search" class="form-control text-white" style="background:#18181C;" 
+                                   placeholder="Search locations..." value="{{ request.GET.search }}">
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-search"></i> Search
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Locations List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm glass-card" style="background:rgba(24,24,28,0.85); color:#fff; border-radius:18px;">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-dark align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>City</th>
+                                    <th>State</th>
+                                    <th>Country</th>
+                                    <th>Products</th>
+                                    <th>Vendors</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for location in page_obj %}
+                                <tr>
+                                    <td>{{ location.name }}</td>
+                                    <td>{{ location.city }}</td>
+                                    <td>{{ location.state }}</td>
+                                    <td>{{ location.country }}</td>
+                                    <td>{{ location.product_count }}</td>
+                                    <td>{{ location.vendor_count }}</td>
+                                    <td>
+                                        <span class="badge {% if location.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                                            {{ location.is_active|yesno:"Active,Inactive" }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a href="{% url 'products:location_edit' location.id %}" 
+                                               class="btn btn-sm btn-outline-info">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <button type="button" 
+                                                    class="btn btn-sm btn-outline-warning toggle-status"
+                                                    data-location-id="{{ location.id }}"
+                                                    data-is-active="{{ location.is_active|lower }}">
+                                                <i class="bi bi-power"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center">No locations found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if page_obj.has_other_pages %}
+                    <nav aria-label="Page navigation" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                                    Previous
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            {% for num in page_obj.paginator.page_range %}
+                            <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                                <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                                    {{ num }}
+                                </a>
+                            </li>
+                            {% endfor %}
+
+                            {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                                    Next
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleButtons = document.querySelectorAll('.toggle-status');
+        
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const locationId = this.dataset.locationId;
+                const isActive = this.dataset.isActive === 'true';
+                
+                fetch(`/products/locations/${locationId}/toggle-status/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update button state
+                        this.dataset.isActive = data.is_active;
+                        
+                        // Update status badge
+                        const statusBadge = this.closest('tr').querySelector('.badge');
+                        statusBadge.textContent = data.is_active ? 'Active' : 'Inactive';
+                        statusBadge.className = `badge ${data.is_active ? 'bg-success' : 'bg-danger'}`;
+                        
+                        // Show success message
+                        showToast('success', data.message);
+                    } else {
+                        showToast('error', data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast('error', 'An error occurred while updating the location status.');
+                });
+            });
+        });
+    });
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+{% endblock %}

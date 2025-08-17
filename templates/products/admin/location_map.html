@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Location Map{% endblock %}
+
+{% block extra_css %}
+<style>
+    #map {
+        height: 600px;
+        width: 100%;
+        border-radius: 18px;
+    }
+    .location-info {
+        padding: 10px;
+        max-width: 200px;
+    }
+    .location-info h5 {
+        margin: 0 0 5px 0;
+        color: #333;
+    }
+    .location-info p {
+        margin: 0;
+        color: #666;
+        font-size: 0.9em;
+    }
+    .location-stats {
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid #eee;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="text-white mb-0">Location Map</h2>
+                <a href="{% url 'products:location_list' %}" class="btn btn-outline-light">
+                    <i class="bi bi-list"></i> Location List
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm glass-card" style="background:rgba(24,24,28,0.85); color:#fff; border-radius:18px;">
+                <div class="card-body">
+                    <div id="map"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Location Statistics -->
+    <div class="row mt-4">
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm glass-card h-100" style="background:rgba(24,24,28,0.85); color:#fff; border-radius:18px;">
+                <div class="card-body text-center">
+                    <i class="bi bi-geo-alt mb-2" style="font-size: 2rem; color: #6BFF57;"></i>
+                    <h3 class="fw-bold" style="color: #6BFF57;">{{ locations|length }}</h3>
+                    <p class="mb-0">Total Locations</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm glass-card h-100" style="background:rgba(24,24,28,0.85); color:#fff; border-radius:18px;">
+                <div class="card-body text-center">
+                    <i class="bi bi-shop mb-2" style="font-size: 2rem; color: #6BFF57;"></i>
+                    <h3 class="fw-bold" style="color: #6BFF57;">{{ total_vendors }}</h3>
+                    <p class="mb-0">Total Vendors</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm glass-card h-100" style="background:rgba(24,24,28,0.85); color:#fff; border-radius:18px;">
+                <div class="card-body text-center">
+                    <i class="bi bi-box-seam mb-2" style="font-size: 2rem; color: #6BFF57;"></i>
+                    <h3 class="fw-bold" style="color: #6BFF57;">{{ total_products }}</h3>
+                    <p class="mb-0">Total Products</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&libraries=places"></script>
+<script>
+    function initMap() {
+        const locations = [
+            {% for location in locations %}
+            {
+                position: { lat: {{ location.latitude }}, lng: {{ location.longitude }} },
+                title: "{{ location.name }}",
+                info: {
+                    name: "{{ location.name }}",
+                    city: "{{ location.city }}",
+                    state: "{{ location.state }}",
+                    country: "{{ location.country }}",
+                    products: {{ location.product_count }},
+                    vendors: {{ location.vendor_count }}
+                }
+            },
+            {% endfor %}
+        ];
+
+        // Create map centered on the first location or a default position
+        const map = new google.maps.Map(document.getElementById("map"), {
+            zoom: 4,
+            center: locations.length > 0 ? locations[0].position : { lat: 0, lng: 0 },
+            styles: [
+                {
+                    "elementType": "geometry",
+                    "stylers": [{"color": "#242f3e"}]
+                },
+                {
+                    "elementType": "labels.text.stroke",
+                    "stylers": [{"color": "#242f3e"}]
+                },
+                {
+                    "elementType": "labels.text.fill",
+                    "stylers": [{"color": "#746855"}]
+                },
+                {
+                    "featureType": "administrative.locality",
+                    "elementType": "labels.text.fill",
+                    "stylers": [{"color": "#d59563"}]
+                },
+                {
+                    "featureType": "water",
+                    "elementType": "geometry",
+                    "stylers": [{"color": "#17263c"}]
+                },
+                {
+                    "featureType": "water",
+                    "elementType": "labels.text.fill",
+                    "stylers": [{"color": "#515c6d"}]
+                },
+                {
+                    "featureType": "water",
+                    "elementType": "labels.text.stroke",
+                    "stylers": [{"color": "#17263c"}]
+                }
+            ]
+        });
+
+        const infoWindow = new google.maps.InfoWindow();
+
+        // Add markers for each location
+        locations.forEach(location => {
+            const marker = new google.maps.Marker({
+                position: location.position,
+                map: map,
+                title: location.title,
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 8,
+                    fillColor: "#6BFF57",
+                    fillOpacity: 0.8,
+                    strokeWeight: 2,
+                    strokeColor: "#FFFFFF"
+                }
+            });
+
+            marker.addListener("click", () => {
+                const content = `
+                    <div class="location-info">
+                        <h5>${location.info.name}</h5>
+                        <p>${location.info.city}, ${location.info.state}</p>
+                        <p>${location.info.country}</p>
+                        <div class="location-stats">
+                            <p><strong>Products:</strong> ${location.info.products}</p>
+                            <p><strong>Vendors:</strong> ${location.info.vendors}</p>
+                        </div>
+                    </div>
+                `;
+                infoWindow.setContent(content);
+                infoWindow.open(map, marker);
+            });
+        });
+
+        // Fit map bounds to include all markers
+        if (locations.length > 0) {
+            const bounds = new google.maps.LatLngBounds();
+            locations.forEach(location => bounds.extend(location.position));
+            map.fitBounds(bounds);
+        }
+    }
+
+    // Initialize map when the page loads
+    document.addEventListener('DOMContentLoaded', initMap);
+</script>
+{% endblock %}

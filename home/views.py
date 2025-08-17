@@ -3,13 +3,11 @@ from django.views.generic import TemplateView, ListView
 from django.db import models
 from django.db.models import Count, Q
 from products.models import Category, Product
-from django.views.generic.edit import FormMixin
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 
-class HomeView(FormMixin, TemplateView):
+class HomeView(TemplateView):
     template_name = 'home/index.html'
-    form_class = None  # We'll handle form in get_context_data
     
     def get_queryset(self):
         # Get all active categories with product counts

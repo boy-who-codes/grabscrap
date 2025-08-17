@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import admin_views
 
 urlpatterns = [
     # Auth and registration
@@ -23,6 +24,9 @@ urlpatterns = [
     path('profile-setup/', views.profile_setup, name='profile_setup'),
     path('user/dashboard/', views.user_dashboard, name='user_dashboard'),
     path('vendor/dashboard/', views.vendor_dashboard, name='vendor_dashboard'),
-    path('admin/dashboard/', views.admin_dashboard, name='admin_dashboard'),
+    path('admin/dashboard/', admin_views.admin_dashboard, name='admin_dashboard'),
+    # Wallet
+    path('wallet/', views.wallet_dashboard, name='wallet_dashboard'),
+    path('wallet/recharge/', views.wallet_recharge, name='wallet_recharge'),
 
-] 
+]

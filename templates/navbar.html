@@ -20,7 +20,7 @@
                     </a>
                 </li>
                 {% endif %}
-                <li class="nav-item"><a class="nav-link" href="/accounts/signup/">Sign Up</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'accounts:signup' %}">Sign Up</a></li>
                 {# User profile dropdown placeholder #}
                 {% if user.is_authenticated %}
                 <li class="nav-item dropdown">
@@ -33,14 +33,14 @@
                         <span>{{ user.full_name|default:user.email }}</span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                        <li><a class="dropdown-item" href="/accounts/profile_setup/"><i class="fas fa-user me-2"></i>Profile</a></li>
+                        <li><a class="dropdown-item" href="{% url 'accounts:profile_setup' %}"><i class="fas fa-user me-2"></i>Profile</a></li>
                         <li><a class="dropdown-item" href="{% url 'wallet:detail' %}"><i class="fas fa-wallet me-2"></i>My Wallet</a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="/accounts/logout/"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                        <li><a class="dropdown-item" href="{% url 'accounts:logout' %}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
                     </ul>
                 </li>
                 {% else %}
-                <li class="nav-item"><a class="nav-link" href="/accounts/login/">Login</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'accounts:login' %}">Login</a></li>
                 {% endif %}
             </ul>
         </div>

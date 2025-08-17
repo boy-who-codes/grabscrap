@@ -1,13 +1,175 @@
 {% extends 'dashboard/base_dashboard.html' %}
+{% block extra_css %}
+<style>
+    #location_map {
+        height: 300px;
+        width: 100%;
+        border-radius: 0.5rem;
+    }
+    .location-info {
+        padding: 10px;
+        max-width: 200px;
+    }
+    .location-info h5 {
+        margin: 0 0 5px 0;
+        color: #333;
+    }
+    .location-info p {
+        margin: 0;
+        color: #666;
+        font-size: 0.9em;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&libraries=places"></script>
+<script>
+    function initMap() {
+        const map = new google.maps.Map(document.getElementById("location_map"), {
+            zoom: 4,
+            center: { lat: 20.5937, lng: 78.9629 }, // Center on India
+            styles: [
+                {
+                    "elementType": "geometry",
+                    "stylers": [{"color": "#242f3e"}]
+                },
+                {
+                    "elementType": "labels.text.stroke",
+                    "stylers": [{"color": "#242f3e"}]
+                },
+                {
+                    "elementType": "labels.text.fill",
+                    "stylers": [{"color": "#746855"}]
+                },
+                {
+                    "featureType": "water",
+                    "elementType": "geometry",
+                    "stylers": [{"color": "#17263c"}]
+                }
+            ]
+        });
+
+        // Add markers for active locations
+        {% for location in locations %}
+        new google.maps.Marker({
+            position: { lat: {{ location.latitude }}, lng: {{ location.longitude }} },
+            map: map,
+            title: "{{ location.name }}",
+            icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 8,
+                fillColor: "#6BFF57",
+                fillOpacity: 0.8,
+                strokeWeight: 2,
+                strokeColor: "#FFFFFF"
+            }
+        });
+        {% endfor %}
+    }
+
+    // Initialize map when the page loads
+    document.addEventListener('DOMContentLoaded', initMap);
+</script>
+{% endblock %}
+
 {% block dashboard_content %}
-<div class="row g-4">
-  <!-- System Overview -->
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-8">Admin Dashboard</h1>
+<!-- Quick Actions Section -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <!-- Location Management with Map -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-semibold mb-4">Location Management</h2>
+            <div id="location_map" style="height: 300px; width: 100%; margin-bottom: 1rem; border-radius: 0.5rem;"></div>
+            <div class="grid grid-cols-3 gap-4 mb-4">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-green-600">{{ total_locations }}</div>
+                    <div class="text-sm text-gray-600">Total Locations</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-blue-600">{{ locations_with_vendors }}</div>
+                    <div class="text-sm text-gray-600">With Vendors</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-purple-600">{{ locations_with_products }}</div>
+                    <div class="text-sm text-gray-600">With Products</div>
+                </div>
+            </div>
+            <div class="space-y-4">
+                <a href="{% url 'products:admin_location_list' %}" 
+                   class="block w-full text-center bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded">
+                    Manage Locations
+                </a>
+                <a href="{% url 'products:admin_location_create' %}" 
+                   class="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded">
+                    Add New Location
+                </a>
+            </div>
+        </div>
+
+        <!-- User Management -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-semibold mb-4">User Management</h2>
+            <div class="space-y-4">
+                <a href="#" class="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded">
+                    Manage Users
+                </a>
+                <a href="#" class="block w-full text-center bg-yellow-600 hover:bg-yellow-700 text-white font-semibold py-2 px-4 rounded">
+                    Vendor Applications
+                </a>
+            </div>
+        </div>
+
+        <!-- System Health -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-semibold mb-4">System Health</h2>
+            <div class="space-y-4">
+                <a href="#" class="block w-full text-center bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded">
+                    View System Logs
+                </a>
+                <a href="#" class="block w-full text-center bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded">
+                    Error Reports
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- KYC Management Section -->
+    <div class="bg-white rounded-lg shadow p-6 mb-8">
+        <h2 class="text-xl font-semibold mb-4">KYC Management</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <a href="#" class="text-center bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 px-4 rounded">
+                Pending KYC Requests
+            </a>
+            <a href="#" class="text-center bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded">
+                Approved KYC List
+            </a>
+            <a href="#" class="text-center bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded">
+                Rejected KYC List
+            </a>
+        </div>
+    </div>
+
+    <!-- Transaction Overview -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-xl font-semibold mb-4">Transaction Overview</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <a href="#" class="text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded">
+                Recent Transactions
+            </a>
+            <a href="#" class="text-center bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded">
+                Transaction Reports
+            </a>
+        </div>
+    </div>
+</div>
   <div class="col-md-6 col-lg-3">
     <div class="card shadow-sm glass-card" style="background:rgba(24,24,28,0.85); color:#fff; border-radius:18px;">
       <div class="card-body text-center">
         <i class="bi bi-people-fill mb-3" style="font-size:2.5rem; color:#6BFF57;"></i>
         <h3 class="fw-bold" style="color:#6BFF57;">{{ total_users }}</h3>
-        <p class="text-muted mb-0">Total Users</p>
+        <p class="mb-0">Total Users</p>
       </div>
     </div>
   </div>
@@ -17,7 +179,7 @@
       <div class="card-body text-center">
         <i class="bi bi-shop mb-3" style="font-size:2.5rem; color:#6BFF57;"></i>
         <h3 class="fw-bold" style="color:#6BFF57;">{{ total_vendors }}</h3>
-        <p class="text-muted mb-0">Total Vendors</p>
+        <p class="mb-0">Total Vendors</p>
       </div>
     </div>
   </div>
@@ -37,7 +199,7 @@
       <div class="card-body text-center">
         <i class="bi bi-currency-exchange mb-3" style="font-size:2.5rem; color:#6BFF57;"></i>
         <h3 class="fw-bold" style="color:#6BFF57;">{{ total_transactions }}</h3>
-        <p class="text-muted mb-0">Transactions</p>
+        <p class="mb-0">Transactions</p>
       </div>
     </div>
   </div>
@@ -66,7 +228,7 @@
 
         <div class="row">
           <div class="col-md-6">
-            <h6 class="text-muted mb-3">Quick Actions</h6>
+            <h6 class="mb-3">Quick Actions</h6>
             <div class="d-grid gap-2">
               <a href="{% url 'kyc_management:pending_list' %}" class="btn btn-warning btn-sm">Review Pending KYC</a>
               <a href="#" class="btn btn-outline-success btn-sm">Export KYC Data</a>
@@ -74,19 +236,19 @@
             </div>
           </div>
           <div class="col-md-6">
-            <h6 class="text-muted mb-3">KYC Statistics</h6>
+            <h6 class="mb-3">KYC Statistics</h6>
             <div class="row text-center">
                            <div class="col-4">
                <div class="fw-bold text-success">{{ approved_kyc }}</div>
-               <small class="text-muted">Approved</small>
+               <small>Approved</small>
              </div>
              <div class="col-4">
                <div class="fw-bold text-warning">{{ pending_kyc }}</div>
-               <small class="text-muted">Pending</small>
+               <small>Pending</small>
              </div>
              <div class="col-4">
                <div class="fw-bold text-danger">{{ rejected_kyc }}</div>
-               <small class="text-muted">Rejected</small>
+               <small>Rejected</small>
              </div>
             </div>
           </div>
@@ -136,6 +298,54 @@
         <div class="d-grid gap-2">
           <a href="#" class="btn btn-outline-success btn-sm">Transaction Logs</a>
           <a href="#" class="btn btn-outline-info btn-sm">Financial Reports</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Location Management -->
+  <div class="col-12">
+    <div class="card shadow-sm glass-card" style="background:rgba(24,24,28,0.85); color:#fff; border-radius:18px;">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="card-title mb-0" style="color:#6BFF57;">Location Management</h5>
+          <a href="{% url 'products:admin_location_list' %}" class="btn btn-outline-success btn-sm">Manage Locations</a>
+        </div>
+        
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <div class="text-center p-3" style="background:rgba(107,255,87,0.1); border-radius:12px;">
+              <i class="bi bi-geo-alt mb-2" style="font-size:2rem; color:#6BFF57;"></i>
+              <h3 class="fw-bold" style="color:#6BFF57;">{{ total_locations }}</h3>
+              <p class="mb-0">Active Locations</p>
+            </div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <div class="text-center p-3" style="background:rgba(107,255,87,0.1); border-radius:12px;">
+              <i class="bi bi-shop mb-2" style="font-size:2rem; color:#6BFF57;"></i>
+              <h3 class="fw-bold" style="color:#6BFF57;">{{ locations_with_vendors }}</h3>
+              <p class="mb-0">Locations with Vendors</p>
+            </div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <div class="text-center p-3" style="background:rgba(107,255,87,0.1); border-radius:12px;">
+              <i class="bi bi-box-seam mb-2" style="font-size:2rem; color:#6BFF57;"></i>
+              <h3 class="fw-bold" style="color:#6BFF57;">{{ locations_with_products }}</h3>
+              <p class="mb-0">Locations with Products</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2 justify-content-center mt-3">
+          <a href="{% url 'products:admin_location_create' %}" class="btn btn-success btn-sm">
+            <i class="bi bi-plus-circle"></i> Add Location
+          </a>
+          <a href="{% url 'products:admin_location_map' %}" class="btn btn-outline-info btn-sm">
+            <i class="bi bi-map"></i> View Map
+          </a>
+          <a href="#" class="btn btn-outline-warning btn-sm">
+            <i class="bi bi-file-earmark-text"></i> Export Data
+          </a>
         </div>
       </div>
     </div>

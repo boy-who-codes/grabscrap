@@ -21,7 +21,7 @@
                             <input type="text" class="form-control" id="id_query" name="query" 
                                    value="{{ search_form.query.value|default:'' }}" 
                                    style="background:#0B0B0F; border:1px solid #333; color:#FFFFFF;"
-                                   placeholder="Search products...">
+                                   placeholder="Search products..." />
                         </div>
 
                         <!-- Category Filter -->
@@ -47,15 +47,30 @@
                                     <input type="number" class="form-control" name="min_price" 
                                            value="{{ search_form.min_price.value|default:'' }}" 
                                            style="background:#0B0B0F; border:1px solid #333; color:#FFFFFF;"
-                                           placeholder="Min">
+                                           placeholder="Min" />
                                 </div>
                                 <div class="col-6">
                                     <input type="number" class="form-control" name="max_price" 
                                            value="{{ search_form.max_price.value|default:'' }}" 
                                            style="background:#0B0B0F; border:1px solid #333; color:#FFFFFF;"
-                                           placeholder="Max">
+                                           placeholder="Max" />
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- Location Filter -->
+                        <div class="mb-3">
+                            <label for="id_location" class="form-label" style="color:#FFFFFF;">Location</label>
+                            <select class="form-select" id="id_location" name="location" 
+                                    style="background:#0B0B0F; border:1px solid #333; color:#FFFFFF;">
+                                <option value="">All Locations</option>
+                                {% for location in locations %}
+                                    <option value="{{ location.id }}" 
+                                            {% if search_form.location.value == location.id %}selected{% endif %}>
+                                        {{ location.name }}, {{ location.city }}
+                                    </option>
+                                {% endfor %}
+                            </select>
                         </div>
 
                         <!-- Unit Filter -->
@@ -81,14 +96,14 @@
                         <div class="mb-3">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="id_in_stock_only" name="in_stock_only" 
-                                       value="1" {% if search_form.in_stock_only.value %}checked{% endif %}>
+                                       value="1" {% if search_form.in_stock_only.value %}checked{% endif %} />
                                 <label class="form-check-label" for="id_in_stock_only" style="color:#C7C7C7;">
                                     In Stock Only
                                 </label>
                             </div>
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="id_featured_only" name="featured_only" 
-                                       value="1" {% if search_form.featured_only.value %}checked{% endif %}>
+                                       value="1" {% if search_form.featured_only.value %}checked{% endif %} />
                                 <label class="form-check-label" for="id_featured_only" style="color:#C7C7C7;">
                                     Featured Only
                                 </label>
@@ -313,4 +328,4 @@ $(document).ready(function() {
     flex: 1;
 }
 </style>
-{% endblock %} 
+{% endblock %}

@@ -6,7 +6,7 @@
         <div class="col-md-6">
             <div class="card p-4" style="background:#121212;">
                 <h2 class="mb-4 text-center" style="color:#6BFF57;">Login</h2>
-                <form method="post">
+                <form method="post" action="{% url 'accounts:login' %}">
                     {% csrf_token %}
                     <input type="hidden" name="next" value="{{ request.GET.next|default:'' }}">
                     <div class="mb-3">

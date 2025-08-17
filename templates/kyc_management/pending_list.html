@@ -25,7 +25,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-white" href="{% url 'admin_dashboard' %}">
+                        <a class="nav-link text-white" href="{% url 'accounts:admin_dashboard' %}">
                             <i class="fas fa-arrow-left me-2"></i>
                             Back to Admin Dashboard
                         </a>
@@ -340,4 +340,4 @@ function showAlert(type, message) {
 
 <!-- CSRF Token for AJAX requests -->
 {% csrf_token %}
-{% endblock %} 
+{% endblock %}

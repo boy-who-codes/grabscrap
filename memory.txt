@@ -1,0 +1,66 @@
+# URL Patterns in Templates
+
+## Accounts App
+- `accounts:login` - User login page
+- `accounts:logout` - User logout
+- `accounts:signup` - User registration
+- `accounts:profile_setup` - User profile setup/editing
+- `accounts:password_reset` - Password reset request
+- `accounts:password_reset_confirm` - Password reset confirmation
+- `accounts:otp_verify` - OTP verification
+- `accounts:phone_verify` - Phone verification
+- `accounts:resend_activation` - Resend activation email
+- `accounts:confirmation_mail_sent` - Confirmation email sent page
+
+## Products App
+- `products:product_list` - List of all products
+- `products:product_detail` - Product details page
+- `products:wishlist` - User's wishlist
+- `products:vendor:product_list` - Vendor's product list (for vendors)
+
+## Orders App
+- `orders:cart` - Shopping cart
+- `orders:checkout` - Checkout process
+- `orders:order_list` - User's order history
+- `orders:order_detail` - Order details
+- `orders:order_success` - Order success page
+
+## Wallet App
+- `wallet:detail` - Wallet details page
+- `wallet:transaction_history` - Wallet transaction history
+
+## KYC Management
+- `kyc_management:kyc_submit` - Submit KYC details
+- `kyc_management:kyc_status` - Check KYC status
+- `kyc_management:kyc_detail` - KYC details
+- `kyc_management:pending_list` - Pending KYC list (admin)
+- `kyc_management:dashboard` - KYC dashboard
+- `kyc_management:reapply` - Reapply for KYC
+
+## Home
+- `home:index` - Home page
+
+## Static Pages
+- `/` - Home page (root URL)
+
+## Notes on URL Patterns
+1. All URLs should use the `{% url %}` template tag with the appropriate namespace
+2. URL names should be in lowercase with words separated by underscores
+3. Use namespaced URLs (app_name:url_name) for better organization
+4. Keep URL patterns consistent with the app structure
+5. Use hyphens in URL paths for better SEO (e.g., `/product-list/` instead of `/product_list/`)
+6. Always include trailing slashes in URLs for consistency
+
+## Common Issues to Watch For
+1. Hardcoded URLs instead of using `{% url %}`
+2. Missing or incorrect namespaces
+3. Inconsistent URL naming
+4. Missing trailing slashes
+5. Direct file paths instead of URL patterns
+
+## Best Practices
+1. Always use `{% url %}` template tags instead of hardcoded URLs
+2. Group related URLs under app namespaces
+3. Use descriptive URL names that reflect their purpose
+4. Keep URL patterns simple and consistent
+5. Document any custom URL patterns in this file
