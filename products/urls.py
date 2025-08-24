@@ -1,4 +1,5 @@
 from django.urls import path
+from .admin_views import category_management, handle_category_request, update_commission_rates
 from . import views
 from . import location_views
 
@@ -30,9 +31,9 @@ urlpatterns = [
     path('admin/categories/', views.admin_category_list, name='admin_category_list'),
     path('admin/categories/create/', views.admin_category_create, name='admin_category_create'),
     path('admin/categories/edit/<uuid:category_id>/', views.admin_category_edit, name='admin_category_edit'),
-    path('admin/commissions/', admin_views.category_management, name='category_management'),
-    path('admin/commission-requests/<uuid:request_id>/', admin_views.handle_category_request, name='handle_category_request'),
-    path('admin/update-commissions/', admin_views.update_commission_rates, name='update_commissions'),
+    path('admin/commissions/', category_management, name='category_management'),
+    path('admin/commission-requests/<uuid:request_id>/', handle_category_request, name='handle_category_request'),
+    path('admin/update-commissions/', update_commission_rates, name='update_commissions'),
     
     # Admin location management
     path('admin/locations/', location_views.location_list, name='admin_location_list'),

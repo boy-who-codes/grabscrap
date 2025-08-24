@@ -7,7 +7,10 @@ from .models import Category, Product, ProductImage, ProductReview, Wishlist
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ['name', 'parent_category', 'is_active', 'sort_order', 'total_products', 'commission_rate']
+    list_display = ['name', 'parent_category', 'commission_rate', 'is_active', 'total_products_calculated', 'sort_order']
+
+    def total_products_calculated(self, obj):
+        return obj.products.count()
     list_filter = ['is_active', 'parent_category']
     search_fields = ['name', 'description']
     list_editable = ['is_active', 'sort_order', 'commission_rate']

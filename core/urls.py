@@ -11,7 +11,7 @@ class RootView(HomeView):
         if request.user.is_authenticated:
             user = request.user
             if user.is_superuser:
-                return redirect('admin_dashboard')
+                return redirect('accounts:admin_dashboard')
             elif user.user_type == 'vendor':
                 return redirect('vendor_dashboard')
             else:
@@ -22,6 +22,7 @@ urlpatterns = [
     path('', RootView.as_view(), name='root'),
     path('admin/', admin.site.urls),
     path('accounts/', include(('accounts.urls', 'accounts'), namespace='accounts')),
+    path('dashboard/', include('dashboard.urls')),
     path('kyc/', include('kyc_management.urls')),
     path('products/', include('products.urls')),
     path('orders/', include('orders.urls')),

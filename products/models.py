@@ -1,5 +1,6 @@
 import uuid
 from django.db import models
+from django.conf import settings
 from django.utils import timezone
 from accounts.models import User, VendorProfile
 
@@ -34,7 +35,7 @@ class Category(models.Model):
     is_active = models.BooleanField(default=True)
     sort_order = models.IntegerField(default=0)
     commission_rate = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True, help_text="Commission rate in percentage (overrides global)")
-    requested_vendors = models.ManyToManyField(settings.AUTH_USER_MODEL, through='CategoryRequest', related_name='requested_categories')
+    requested_vendors = models.ManyToManyField(settings.AUTH_USER_MODEL, through='CategoryRequest', through_fields=('category', 'vendor'), related_name='requested_categories')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -70,9 +71,9 @@ class CategoryRequest(models.Model):
         return f"{self.vendor.email} - {self.category.name}"
 
     class Meta:
-        ordering = ['sort_order', 'name']
-        verbose_name = "Category"
-        verbose_name_plural = "Categories"
+        ordering = ['-requested_at']
+        verbose_name = "Category Request"
+        verbose_name_plural = "Category Requests"
 
     def __str__(self):
         return self.name
