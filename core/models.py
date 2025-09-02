@@ -64,6 +64,29 @@ class User(AbstractUser):
         return 'Customer'
 
 
+class TwoFactorAuth(BaseModel):
+    """2FA OTP model"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    otp_code = models.CharField(max_length=6)
+    purpose = models.CharField(max_length=20, default='login')
+    is_used = models.BooleanField(default=False)
+    expires_at = models.DateTimeField()
+    
+    def __str__(self):
+        return f"OTP for {self.user.email}"
+
+
+class LoginHistory(BaseModel):
+    """Login history tracking"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    ip_address = models.GenericIPAddressField()
+    user_agent = models.TextField()
+    is_successful = models.BooleanField(default=True)
+    
+    def __str__(self):
+        return f"{self.user.email} - {self.created_at}"
+
+
 class Notification(models.Model):
     NOTIFICATION_TYPES = [
         ('order', 'Order Update'),
