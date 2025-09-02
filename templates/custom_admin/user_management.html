@@ -1,0 +1,248 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block page_title %}User Management{% endblock %}
+{% block page_description %}Manage users, vendors, and account status{% endblock %}
+
+{% block content %}
+<!-- User Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <h3>{{ user_stats.total_users }}</h3>
+                <p class="mb-0">Total Users</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h3>{{ user_stats.verified_users }}</h3>
+                <p class="mb-0">Verified Users</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <h3>{{ user_stats.vendors }}</h3>
+                <p class="mb-0">Vendors</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body text-center">
+                <h3>{{ user_stats.banned_users }}</h3>
+                <p class="mb-0">Banned Users</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Users -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-people"></i> Recent Users</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Joined</th>
+                        <th>Last Login</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in recent_users %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if user.profile_photo %}
+                                        <img src="{{ user.profile_photo.url }}" class="rounded-circle me-2" 
+                                             width="32" height="32">
+                                    {% else %}
+                                        <i class="bi bi-person-circle fs-4 text-muted me-2"></i>
+                                    {% endif %}
+                                    <div>
+                                        <strong>{{ user.full_name|default:user.username }}</strong><br>
+                                        <small class="text-muted">@{{ user.username }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ user.email }}</td>
+                            <td>
+                                {% if user.is_superuser %}
+                                    <span class="badge bg-danger">Admin</span>
+                                {% elif user.is_vendor %}
+                                    <span class="badge bg-info">Vendor</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Customer</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.is_banned %}
+                                    <span class="badge bg-danger">Banned</span>
+                                {% elif not user.is_verified %}
+                                    <span class="badge bg-warning">Unverified</span>
+                                {% elif user.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ user.date_joined|date:"M d, Y" }}</td>
+                            <td>
+                                {% if user.last_login %}
+                                    {{ user.last_login|timesince }} ago
+                                {% else %}
+                                    Never
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="/admin/core/user/{{ user.id }}/change/" 
+                                       class="btn btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    {% if not user.is_superuser %}
+                                        <form method="post" action="{% url 'custom_admin:toggle_user_ban' user.id %}" class="d-inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-outline-{% if user.is_banned %}success{% else %}danger{% endif %}"
+                                                    onclick="return confirm('{% if user.is_banned %}Unban{% else %}Ban{% endif %} this user?')">
+                                                <i class="bi bi-{% if user.is_banned %}check{% else %}x{% endif %}"></i>
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                    <button class="btn btn-outline-info" onclick="viewUserActivity('{{ user.id }}')">
+                                        <i class="bi bi-activity"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Banned Users -->
+{% if banned_users %}
+<div class="card">
+    <div class="card-header bg-danger text-white">
+        <h5 class="mb-0"><i class="bi bi-x-circle"></i> Banned Users</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for user in banned_users %}
+                <div class="col-md-6 mb-3">
+                    <div class="card border-danger">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ user.full_name|default:user.username }}</strong><br>
+                                    <small class="text-muted">{{ user.email }}</small>
+                                </div>
+                                <div>
+                                    <form method="post" action="{% url 'custom_admin:toggle_user_ban' user.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-success"
+                                                onclick="return confirm('Unban this user?')">
+                                            <i class="bi bi-check"></i> Unban
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- User Activity Modal -->
+<div class="modal fade" id="userActivityModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">User Activity</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-3 text-center">
+                        <h4 class="text-primary" id="activityOrders">0</h4>
+                        <small>Orders</small>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h4 class="text-success" id="activitySpent">₹0</h4>
+                        <small>Total Spent</small>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h4 class="text-info" id="activityChats">0</h4>
+                        <small>Chat Messages</small>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h4 class="text-warning" id="activityReports">0</h4>
+                        <small>Reports</small>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Activity</th>
+                                <th>Details</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="activityList">
+                            <!-- Activity items will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function viewUserActivity(userId) {
+    // Load user activity data
+    document.getElementById('activityOrders').textContent = '12';
+    document.getElementById('activitySpent').textContent = '₹2,450';
+    document.getElementById('activityChats').textContent = '45';
+    document.getElementById('activityReports').textContent = '0';
+    
+    // Sample activity data
+    const activities = [
+        { activity: 'Order Placed', details: 'Order #12345', date: '2 hours ago' },
+        { activity: 'Chat Message', details: 'Message to vendor', date: '1 day ago' },
+        { activity: 'Profile Updated', details: 'Changed address', date: '3 days ago' }
+    ];
+    
+    const activityList = document.getElementById('activityList');
+    activityList.innerHTML = activities.map(item => `
+        <tr>
+            <td>${item.activity}</td>
+            <td>${item.details}</td>
+            <td>${item.date}</td>
+        </tr>
+    `).join('');
+    
+    new bootstrap.Modal(document.getElementById('userActivityModal')).show();
+}
+</script>
+{% endblock %}

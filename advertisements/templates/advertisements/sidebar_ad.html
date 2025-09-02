@@ -1,0 +1,18 @@
+{% if ads %}
+<div class="sidebar-ads">
+    <h6 class="text-muted mb-3">Sponsored</h6>
+    {% for ad in ads %}
+    <div class="card mb-3 ad-sidebar" data-ad-id="{{ ad.id }}">
+        <a href="{% url 'advertisements:track_click' ad.id %}" target="_blank" class="text-decoration-none">
+            <img src="{{ ad.image.url }}" class="card-img-top" alt="{{ ad.title }}" style="height: 120px; object-fit: cover;">
+            <div class="card-body p-2">
+                <h6 class="card-title mb-1 small">{{ ad.title }}</h6>
+                {% if ad.description %}
+                <p class="card-text small text-muted">{{ ad.description|truncatewords:8 }}</p>
+                {% endif %}
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KABAADWALA™ - Verification Code</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #2563eb; color: white; padding: 20px; text-align: center; }
+        .content { background: #f8f9fa; padding: 30px; }
+        .otp-box { background: white; border: 2px solid #2563eb; padding: 20px; text-align: center; margin: 20px 0; border-radius: 8px; }
+        .otp-code { font-size: 32px; font-weight: bold; color: #2563eb; letter-spacing: 5px; }
+        .footer { background: #6c757d; color: white; padding: 15px; text-align: center; font-size: 12px; }
+        .warning { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 15px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 KABAADWALA™</h1>
+            <p>Verification Code</p>
+        </div>
+        
+        <div class="content">
+            <h2>Hi {{ user.full_name|default:user.username }}!</h2>
+            
+            {% if purpose == 'login' %}
+                <p>You requested to log in to your KABAADWALA™ account. Please use the verification code below:</p>
+            {% elif purpose == 'password_reset' %}
+                <p>You requested to reset your password. Please use the verification code below:</p>
+            {% else %}
+                <p>Please use the verification code below to complete your request:</p>
+            {% endif %}
+            
+            <div class="otp-box">
+                <div class="otp-code">{{ otp_code }}</div>
+                <p><strong>This code expires in {{ expires_in }} minutes</strong></p>
+            </div>
+            
+            <div class="warning">
+                <strong>⚠️ Security Notice:</strong>
+                <ul>
+                    <li>Never share this code with anyone</li>
+                    <li>KABAADWALA™ will never ask for your OTP via phone or email</li>
+                    <li>If you didn't request this code, please ignore this email</li>
+                </ul>
+            </div>
+            
+            <p>If you have any questions, please contact our support team.</p>
+            
+            <p>Best regards,<br>
+            <strong>KABAADWALA™ Team</strong></p>
+        </div>
+        
+        <div class="footer">
+            <p>&copy; 2024 KABAADWALA™. All rights reserved.</p>
+            {% if site_url %}
+                <p><a href="{{ site_url }}" style="color: white;">Visit our website</a></p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

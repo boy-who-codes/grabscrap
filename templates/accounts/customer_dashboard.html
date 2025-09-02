@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+
+{% block title %}Customer Dashboard - KABAADWALA™{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        {% if user.profile_photo %}
+                            <img src="{{ user.profile_photo.url }}" alt="Profile" class="rounded-circle mb-2" width="80" height="80">
+                        {% else %}
+                            <i class="bi bi-person-circle display-3 text-muted"></i>
+                        {% endif %}
+                        <h6>{{ user.full_name|default:user.username }}</h6>
+                        <small class="text-muted">{{ user.email }}</small>
+                        <div class="mt-2">
+                            <span class="badge bg-primary">{{ user_type }}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Wallet Card -->
+                    <div class="wallet-balance text-center mb-3">
+                        <h5><i class="bi bi-wallet2"></i> Wallet Balance</h5>
+                        <h3>₹{{ user_wallet.current_balance|floatformat:2 }}</h3>
+                        <a href="{% url 'wallet:detail' %}" class="btn btn-light btn-sm">
+                            <i class="bi bi-plus-circle"></i> Manage Wallet
+                        </a>
+                    </div>
+                    
+                    <!-- Navigation -->
+                    <div class="list-group list-group-flush">
+                        <a href="{% url 'accounts:dashboard' %}" class="list-group-item list-group-item-action active">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                        <a href="{% url 'orders:list' %}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-box-seam"></i> My Orders
+                        </a>
+                        <a href="{% url 'accounts:addresses' %}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-geo-alt"></i> Addresses
+                        </a>
+                        <a href="{% url 'wallet:detail' %}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-list-ul"></i> Wallet History
+                        </a>
+                        <a href="{% url 'accounts:profile' %}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-person"></i> Profile Settings
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Customer Dashboard</h2>
+                <a href="{% url 'products:list' %}" class="btn btn-primary">
+                    <i class="bi bi-shop"></i> Browse Products
+                </a>
+            </div>
+            
+            <!-- Stats Cards -->
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>{{ stats.total_orders }}</h4>
+                                    <small>Total Orders</small>
+                                </div>
+                                <i class="bi bi-box-seam display-6"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>₹{{ stats.total_spent|floatformat:2 }}</h4>
+                                    <small>Total Spent</small>
+                                </div>
+                                <i class="bi bi-currency-rupee display-6"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>{{ stats.pending_orders }}</h4>
+                                    <small>Pending Orders</small>
+                                </div>
+                                <i class="bi bi-clock display-6"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>{{ stats.completed_orders }}</h4>
+                                    <small>Completed</small>
+                                </div>
+                                <i class="bi bi-check-circle display-6"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <!-- Recent Orders -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Recent Orders</h5>
+                            <a href="{% url 'orders:list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                        </div>
+                        <div class="card-body">
+                            {% if recent_orders %}
+                                {% for order in recent_orders %}
+                                <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                                    <div>
+                                        <strong>#{{ order.order_number }}</strong>
+                                        <small class="text-muted d-block">{{ order.vendor.store_name }}</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <div>₹{{ order.total_amount|floatformat:2 }}</div>
+                                        <span class="order-status status-{{ order.order_status }}">
+                                            {{ order.get_order_status_display }}
+                                        </span>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted text-center">No orders yet</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Transactions -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Recent Transactions</h5>
+                            <a href="{% url 'wallet:detail' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                        </div>
+                        <div class="card-body">
+                            {% if recent_transactions %}
+                                {% for transaction in recent_transactions %}
+                                <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                                    <div>
+                                        <strong>{{ transaction.get_transaction_type_display }}</strong>
+                                        <small class="text-muted d-block">{{ transaction.created_at|date:"M d, Y" }}</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="{% if transaction.transaction_type == 'recharge' %}text-success{% else %}text-danger{% endif %}">
+                                            {% if transaction.transaction_type == 'recharge' %}+{% else %}-{% endif %}₹{{ transaction.amount|floatformat:2 }}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted text-center">No transactions yet</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

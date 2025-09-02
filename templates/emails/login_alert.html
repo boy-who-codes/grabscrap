@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KABAADWALA™ - Login Alert</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #d97706; color: white; padding: 20px; text-align: center; }
+        .content { background: #f8f9fa; padding: 30px; }
+        .login-details { background: white; border: 1px solid #dee2e6; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .detail-row { display: flex; justify-content: space-between; margin: 8px 0; padding: 5px 0; border-bottom: 1px solid #f1f3f4; }
+        .detail-label { font-weight: bold; color: #6c757d; }
+        .footer { background: #6c757d; color: white; padding: 15px; text-align: center; font-size: 12px; }
+        .security-notice { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 15px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 KABAADWALA™</h1>
+            <p>Security Alert - New Login Detected</p>
+        </div>
+        
+        <div class="content">
+            <h2>Hi {{ user.full_name|default:user.username }}!</h2>
+            
+            <p>We detected a new login to your KABAADWALA™ account. Here are the details:</p>
+            
+            <div class="login-details">
+                <h3>Login Details</h3>
+                <div class="detail-row">
+                    <span class="detail-label">Time:</span>
+                    <span>{{ login_time|date:"F d, Y at g:i A" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">IP Address:</span>
+                    <span>{{ login_history.ip_address }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Location:</span>
+                    <span>{{ login_history.location_info.city }}, {{ login_history.location_info.country }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Device:</span>
+                    <span>{{ login_history.device_info.device }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Browser:</span>
+                    <span>{{ login_history.device_info.browser }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Operating System:</span>
+                    <span>{{ login_history.device_info.os }}</span>
+                </div>
+            </div>
+            
+            <div class="security-notice">
+                <h4>🛡️ Was this you?</h4>
+                <p><strong>If this was you:</strong> No action needed. You can safely ignore this email.</p>
+                <p><strong>If this wasn't you:</strong> Please immediately:</p>
+                <ul>
+                    <li>Change your password</li>
+                    <li>Review your account activity</li>
+                    <li>Contact our support team</li>
+                </ul>
+            </div>
+            
+            <p>We send these alerts to help keep your account secure. If you have any concerns, please don't hesitate to contact our support team.</p>
+            
+            <p>Best regards,<br>
+            <strong>KABAADWALA™ Security Team</strong></p>
+        </div>
+        
+        <div class="footer">
+            <p>&copy; 2024 KABAADWALA™. All rights reserved.</p>
+            {% if site_url %}
+                <p><a href="{{ site_url }}" style="color: white;">Visit our website</a></p>
+            {% endif %}
+            <p>Need help? Contact us at security@kabaadwala.com</p>
+        </div>
+    </div>
+</body>
+</html>

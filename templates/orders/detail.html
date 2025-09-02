@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+
+{% block title %}Order #{{ order.order_number }} - KABAADWALA™{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5>Order #{{ order.order_number }}</h5>
+                    <span class="badge bg-{% if order.order_status == 'completed' %}success{% elif order.order_status == 'cancelled' %}danger{% else %}warning{% endif %} fs-6">
+                        {{ order.get_order_status_display }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <!-- Order Items -->
+                    <h6>Order Items</h6>
+                    {% for item in order.items.all %}
+                    <div class="row border-bottom py-3">
+                        <div class="col-md-2">
+                            {% if item.product.images %}
+                                <img src="{{ item.product.images.0 }}" alt="{{ item.product.title }}" class="img-fluid rounded">
+                            {% else %}
+                                <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 80px;">
+                                    <i class="bi bi-image text-muted"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <h6>{{ item.product.title }}</h6>
+                            <p class="text-muted mb-1">{{ item.product.vendor.store_name }}</p>
+                            <small class="text-muted">{{ item.product.category.name }}</small>
+                        </div>
+                        <div class="col-md-2 text-center">
+                            <strong>{{ item.quantity }}</strong><br>
+                            <small class="text-muted">{{ item.product.unit }}</small>
+                        </div>
+                        <div class="col-md-2 text-end">
+                            <strong>₹{{ item.total_price|floatformat:2 }}</strong><br>
+                            <small class="text-muted">₹{{ item.price|floatformat:2 }} each</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    
+                    <!-- Order Timeline -->
+                    <div class="mt-4">
+                        <h6>Order Timeline</h6>
+                        <div class="timeline">
+                            <div class="timeline-item {% if order.order_status != 'cancelled' %}active{% endif %}">
+                                <i class="bi bi-check-circle"></i>
+                                <div>
+                                    <strong>Order Placed</strong><br>
+                                    <small class="text-muted">{{ order.created_at|date:"M d, Y H:i" }}</small>
+                                </div>
+                            </div>
+                            {% if order.order_status != 'cancelled' %}
+                            <div class="timeline-item {% if order.order_status in 'confirmed,packed,shipped,delivered,completed' %}active{% endif %}">
+                                <i class="bi bi-check-circle"></i>
+                                <div>
+                                    <strong>Order Confirmed</strong><br>
+                                    <small class="text-muted">Vendor confirmed your order</small>
+                                </div>
+                            </div>
+                            <div class="timeline-item {% if order.order_status in 'packed,shipped,delivered,completed' %}active{% endif %}">
+                                <i class="bi bi-box"></i>
+                                <div>
+                                    <strong>Order Packed</strong><br>
+                                    <small class="text-muted">Your order is being prepared</small>
+                                </div>
+                            </div>
+                            <div class="timeline-item {% if order.order_status in 'shipped,delivered,completed' %}active{% endif %}">
+                                <i class="bi bi-truck"></i>
+                                <div>
+                                    <strong>Order Shipped</strong><br>
+                                    <small class="text-muted">Your order is on the way</small>
+                                </div>
+                            </div>
+                            <div class="timeline-item {% if order.order_status in 'delivered,completed' %}active{% endif %}">
+                                <i class="bi bi-house-check"></i>
+                                <div>
+                                    <strong>Order Delivered</strong><br>
+                                    <small class="text-muted">Order delivered successfully</small>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="timeline-item cancelled">
+                                <i class="bi bi-x-circle"></i>
+                                <div>
+                                    <strong>Order Cancelled</strong><br>
+                                    <small class="text-muted">{{ order.updated_at|date:"M d, Y H:i" }}</small>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <!-- Order Summary -->
+            <div class="card">
+                <div class="card-header">
+                    <h6>Order Summary</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal</span>
+                        <span>₹{{ order.subtotal|floatformat:2 }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Delivery Charges</span>
+                        <span>₹{{ order.delivery_charges|floatformat:2 }}</span>
+                    </div>
+                    {% if order.discount_amount %}
+                    <div class="d-flex justify-content-between mb-2 text-success">
+                        <span>Discount</span>
+                        <span>-₹{{ order.discount_amount|floatformat:2 }}</span>
+                    </div>
+                    {% endif %}
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <strong>Total Amount</strong>
+                        <strong>₹{{ order.total_amount|floatformat:2 }}</strong>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Delivery Address -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6>Delivery Address</h6>
+                </div>
+                <div class="card-body">
+                    <strong>{{ order.delivery_address.recipient_name }}</strong><br>
+                    {% if order.delivery_address.flat_number %}{{ order.delivery_address.flat_number }}, {% endif %}
+                    {{ order.delivery_address.street_address }}<br>
+                    {% if order.delivery_address.landmark %}{{ order.delivery_address.landmark }}<br>{% endif %}
+                    {{ order.delivery_address.city }}, {{ order.delivery_address.state }}<br>
+                    {{ order.delivery_address.pincode }}<br>
+                    <small class="text-muted">
+                        <i class="bi bi-telephone"></i> {{ order.delivery_address.recipient_phone }}
+                    </small>
+                </div>
+            </div>
+            
+            <!-- Vendor Info -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6>Vendor Information</h6>
+                </div>
+                <div class="card-body">
+                    <strong>{{ order.vendor.store_name }}</strong><br>
+                    <small class="text-muted">{{ order.vendor.business_email }}</small><br>
+                    <small class="text-muted">{{ order.vendor.business_phone }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline-item {
+    position: relative;
+    padding-bottom: 20px;
+    opacity: 0.5;
+}
+
+.timeline-item.active {
+    opacity: 1;
+}
+
+.timeline-item.cancelled {
+    opacity: 1;
+    color: #dc3545;
+}
+
+.timeline-item:before {
+    content: '';
+    position: absolute;
+    left: -22px;
+    top: 0;
+    width: 2px;
+    height: 100%;
+    background-color: #dee2e6;
+}
+
+.timeline-item.active:before {
+    background-color: #28a745;
+}
+
+.timeline-item.cancelled:before {
+    background-color: #dc3545;
+}
+
+.timeline-item i {
+    position: absolute;
+    left: -30px;
+    top: 0;
+    width: 16px;
+    height: 16px;
+    background-color: white;
+    border: 2px solid #dee2e6;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+}
+
+.timeline-item.active i {
+    border-color: #28a745;
+    color: #28a745;
+}
+
+.timeline-item.cancelled i {
+    border-color: #dc3545;
+    color: #dc3545;
+}
+</style>
+{% endblock %}

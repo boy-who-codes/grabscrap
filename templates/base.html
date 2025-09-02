@@ -1,0 +1,744 @@
+{% load static %}
+{% load ad_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}KABAADWALA™{% endblock %}</title>
+    
+    <!-- Preload critical resources -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    
+    <!-- Critical CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <!-- Inline critical styles -->
+    <style>
+        :root {
+            --primary-color: #198754;
+            --primary-hover: #157347;
+            --secondary-color: #6c757d;
+            --success-color: #198754;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #0dcaf0;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+        }
+        
+        .navbar-brand { 
+            font-weight: bold; 
+            font-size: 1.5rem; 
+            transition: all 0.3s ease;
+        }
+        
+        .navbar-light .navbar-nav .nav-link { 
+            color: #495057; 
+            font-weight: 500; 
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .navbar-light .navbar-nav .nav-link:hover { 
+            color: var(--primary-color); 
+        }
+        .navbar-light .navbar-nav .nav-link.active { 
+            color: var(--primary-color); 
+        }
+        
+        .footer { 
+            background: var(--primary-color);
+            color: white; 
+            margin-top: 50px; 
+        }
+        
+        .card { 
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); 
+            border: 1px solid rgba(0, 0, 0, 0.125); 
+            transition: all 0.3s ease;
+        }
+        
+        .btn-success { 
+            background-color: var(--primary-color);
+            border-color: var(--primary-color); 
+            transition: all 0.3s ease;
+        }
+        .btn-success:hover { 
+            background-color: var(--primary-hover);
+            border-color: #146c43; 
+        }
+        
+        .btn-outline-success { 
+            color: var(--primary-color); 
+            border-color: var(--primary-color); 
+            transition: all 0.3s ease;
+        }
+        .btn-outline-success:hover { 
+            background-color: var(--primary-color); 
+            border-color: var(--primary-color); 
+            color: white; 
+        }
+        
+        .text-success { color: var(--primary-color) !important; }
+        .bg-success { background-color: var(--primary-color) !important; }
+        
+        .dropdown-menu { 
+            border: none; 
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15); 
+            border-radius: 0.5rem;
+            animation: fadeInDown 0.3s ease;
+        }
+        .dropdown-item:hover { 
+            background-color: var(--light-color); 
+            color: var(--primary-color);
+        }
+        
+        /* Logout button styling */
+        .dropdown-item.border-0 {
+            width: 100%;
+            text-align: left;
+            padding: 0.25rem 1rem;
+        }
+        
+        .navbar-toggler { 
+            border: none; 
+            transition: all 0.3s ease;
+        }
+        .navbar-toggler:focus { 
+            box-shadow: none; 
+        }
+        
+        /* Notification Bell Animation */
+        .notification-bell {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        .notification-bell .badge {
+            animation: pulse 2s infinite;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .navbar-brand {
+                font-size: 1.2rem;
+            }
+            .navbar-nav {
+                text-align: center;
+                padding-top: 1rem;
+            }
+            .navbar-nav .nav-link {
+                padding: 0.5rem 1rem;
+                margin: 0.2rem 0;
+                border-radius: 0.5rem;
+            }
+            .dropdown-menu {
+                width: 100%;
+                margin-top: 0.5rem;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .container {
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+            .card {
+                margin-bottom: 1rem;
+            }
+            .btn {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+            .btn-group .btn {
+                width: auto;
+            }
+        }
+        
+        /* Animations */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        
+        /* Loading States */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        
+        .spinner-border-sm {
+            width: 1rem;
+            height: 1rem;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--light-color);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--secondary-color);
+            border-radius: 4px;
+        }
+        
+        /* Form Enhancements */
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25);
+        }
+        
+        .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25);
+        }
+        
+        /* Alert Enhancements */
+        .alert {
+            border: none;
+            border-radius: 0.5rem;
+            animation: fadeInDown 0.5s ease;
+        }
+        
+        /* Badge Enhancements */
+        .badge {
+            font-size: 0.75em;
+            border-radius: 0.375rem;
+        }
+        
+        /* Table Enhancements */
+        .table {
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        
+        .table thead th {
+            border-bottom: 2px solid var(--primary-color);
+            background-color: var(--light-color);
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-success" href="{% url 'core:home' %}">
+                <i class="bi bi-recycle fs-4"></i> KABAADWALA™
+            </a>
+            
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="{% url 'core:home' %}">
+                            <i class="bi bi-house-door"></i> Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="{% url 'products:list' %}">
+                            <i class="bi bi-grid-3x3-gap"></i> Products
+                        </a>
+                    </li>
+                    {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="{% url 'chat:dashboard' %}">
+                            <i class="bi bi-chat-dots"></i> Chat
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link px-3" href="{% url 'orders:list' %}">
+                                <i class="bi bi-bag-check"></i> Orders
+                            </a>
+                        </li>
+                        {% if user.is_vendor %}
+                            <li class="nav-item">
+                                <a class="nav-link px-3" href="{% url 'vendors:dashboard' %}">
+                                    <i class="bi bi-shop"></i> Vendor Panel
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="nav-item">
+                                <a class="nav-link px-3" href="{% url 'vendors:register_form' %}">
+                                    <i class="bi bi-shop"></i> Become Vendor
+                                </a>
+                            </li>
+                        {% endif %}
+                        {% if user.is_staff %}
+                            <li class="nav-item">
+                                <a class="nav-link px-3" href="{% url 'custom_admin:dashboard' %}">
+                                    <i class="bi bi-shield-check"></i> Admin Panel
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% endif %}
+                </ul>
+                
+                <ul class="navbar-nav align-items-center">
+                    {% if user.is_authenticated %}
+                        <!-- Cart (customers only) -->
+                        {% if not user.is_vendor %}
+                        <li class="nav-item me-3">
+                            <a class="btn btn-outline-primary btn-sm position-relative" href="{% url 'products:cart' %}">
+                                <i class="bi bi-cart"></i> Cart
+                                {% if user_cart.total_items %}
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                        {{ user_cart.total_items }}
+                                    </span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        
+                        <!-- Wallet Balance (customers only) -->
+                        {% if not user.is_vendor %}
+                        <li class="nav-item me-3">
+                            <a class="btn btn-outline-success btn-sm" href="{% url 'wallet:detail' %}">
+                                <i class="bi bi-wallet2"></i> ₹{{ user_wallet.current_balance|floatformat:2 }}
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% endif %}
+                        
+                        <!-- Notifications -->
+                        <li class="nav-item dropdown me-3">
+                            <a class="nav-link position-relative notification-bell" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="notificationBell">
+                                <i class="bi bi-bell fs-5"></i>
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationCount" style="display: none;">
+                                    0
+                                </span>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-end p-0 shadow-lg" style="width: 350px; max-width: 90vw;" id="notificationDropdown">
+                                <div class="d-flex justify-content-between align-items-center p-3 border-bottom bg-light">
+                                    <h6 class="mb-0 fw-bold">
+                                        <i class="bi bi-bell me-2"></i>Notifications
+                                    </h6>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="markAllNotificationsRead()">
+                                        <i class="bi bi-check-all"></i> Mark all read
+                                    </button>
+                                </div>
+                                <div id="notificationList" style="max-height: 400px; overflow-y: auto;">
+                                    <div class="text-center p-4 text-muted">
+                                        <i class="bi bi-bell-slash display-4 opacity-50"></i>
+                                        <p class="mt-2 mb-0">No notifications</p>
+                                    </div>
+                                </div>
+                                <div class="p-2 border-top text-center bg-light">
+                                    <a href="{% url 'core:notifications' %}" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-list-ul"></i> View All
+                                    </a>
+                                </div>
+                            </div>
+                        </li>
+                        
+                        <!-- User Menu -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                {% if user.profile_photo %}
+                                    <img src="{{ user.profile_photo.url }}" alt="Profile" class="rounded-circle me-2" width="32" height="32">
+                                {% else %}
+                                    <div class="bg-{% if user.is_admin_user %}warning{% elif user.is_vendor %}info{% else %}success{% endif %} rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                        {% if user.is_admin_user %}
+                                            <i class="bi bi-shield-check text-white"></i>
+                                        {% elif user.is_vendor %}
+                                            <i class="bi bi-shop text-white"></i>
+                                        {% else %}
+                                            <i class="bi bi-person text-white"></i>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                                <div class="d-flex flex-column align-items-start">
+                                    <span class="fw-bold">{{ user.full_name|default:user.username }}</span>
+                                    <small class="text-muted">{{ user.get_user_type_display|default:"Customer" }}</small>
+                                </div>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                {% if user.is_admin_user %}
+                                    <li><a class="dropdown-item" href="{% url 'accounts:admin_dashboard' %}">
+                                        <i class="bi bi-speedometer2"></i> Admin Dashboard
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="/admin/" target="_blank">
+                                        <i class="bi bi-gear"></i> Admin Panel
+                                    </a></li>
+                                {% elif user.is_vendor %}
+                                    <li><a class="dropdown-item" href="{% url 'vendors:dashboard' %}">
+                                        <i class="bi bi-shop"></i> Vendor Dashboard
+                                    </a></li>
+                                {% else %}
+                                    <li><a class="dropdown-item" href="{% url 'accounts:dashboard' %}">
+                                        <i class="bi bi-speedometer2"></i> Dashboard
+                                    </a></li>
+                                {% endif %}
+                                <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">
+                                    <i class="bi bi-person"></i> Profile
+                                </a></li>
+                                {% if not user.is_vendor %}
+                                <li><a class="dropdown-item" href="{% url 'accounts:addresses' %}">
+                                    <i class="bi bi-geo-alt"></i> Addresses
+                                </a></li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form method="post" action="{% url 'accounts:logout' %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="dropdown-item border-0 bg-transparent">
+                                            <i class="bi bi-box-arrow-right"></i> Logout
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item me-2">
+                            <a class="btn btn-outline-success" href="{% url 'accounts:login' %}">
+                                <i class="bi bi-box-arrow-in-right"></i> Login
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-success" href="{% url 'accounts:signup' %}">
+                                <i class="bi bi-person-plus"></i> Sign Up
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+        <div class="container mt-3">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {% if message.tags == 'success' %}
+                        <i class="bi bi-check-circle"></i>
+                    {% elif message.tags == 'error' %}
+                        <i class="bi bi-exclamation-circle"></i>
+                    {% elif message.tags == 'warning' %}
+                        <i class="bi bi-exclamation-triangle"></i>
+                    {% else %}
+                        <i class="bi bi-info-circle"></i>
+                    {% endif %}
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="container my-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Development Email Modal -->
+    {% if debug %}
+    <div class="modal fade" id="devEmailModal" tabindex="-1" aria-labelledby="devEmailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title" id="devEmailModalLabel">
+                        <i class="bi bi-envelope"></i> Development Email
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="emailContent">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="copyEmailBtn">
+                        <i class="bi bi-clipboard"></i> Copy Link
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Footer -->
+    <footer class="footer py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5><i class="bi bi-recycle"></i> KABAADWALA™</h5>
+                    <p>Your trusted hyperlocal scrap marketplace connecting buyers with verified vendors.</p>
+                </div>
+                <div class="col-md-4">
+                    <h6>Quick Links</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="{% url 'core:home' %}" class="text-white-50">Home</a></li>
+                        <li><a href="{% url 'products:list' %}" class="text-white-50">Products</a></li>
+                        <li><a href="#" class="text-white-50">About Us</a></li>
+                        <li><a href="#" class="text-white-50">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h6>Support</h6>
+                    <p class="text-white-50">
+                        <i class="bi bi-envelope"></i> support@kabaadwala.com<br>
+                        <i class="bi bi-phone"></i> +91-9999999999
+                    </p>
+                    <div>
+                        <a href="#" class="text-white-50 me-3" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="text-white-50 me-3" aria-label="Twitter"><i class="bi bi-twitter"></i></a>
+                        <a href="#" class="text-white-50 me-3" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+                        <a href="#" class="text-white-50" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
+                    </div>
+                </div>
+            </div>
+            <hr class="my-4">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <p class="mb-0 text-white-50">&copy; 2024 KABAADWALA™. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <a href="#" class="text-white-50 me-3">Privacy Policy</a>
+                    <a href="#" class="text-white-50">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS - Load at end for better performance -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+    
+    {% if debug %}
+    <script>
+    // Development email modal functions
+    function showDevEmail(userId) {
+        const modal = new bootstrap.Modal(document.getElementById('devEmailModal'));
+        const content = document.getElementById('emailContent');
+        
+        modal.show();
+        
+        // Fetch email data
+        fetch(`/accounts/dev-email/${userId}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const email = data.email;
+                    content.innerHTML = `
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <strong>Subject:</strong> ${email.subject}
+                            </div>
+                            <div class="card-body">
+                                <p><strong>From:</strong> ${email.from_email}</p>
+                                <p><strong>To:</strong> ${email.to_email}</p>
+                                <hr>
+                                <div class="bg-light p-3 rounded">
+                                    <pre style="white-space: pre-wrap;">${email.message}</pre>
+                                </div>
+                                <div class="mt-3">
+                                    <a href="${email.verification_link}" target="_blank" class="btn btn-success">
+                                        <i class="bi bi-link-45deg"></i> Open Verification Link
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.getElementById('copyEmailBtn').onclick = () => {
+                        navigator.clipboard.writeText(email.verification_link);
+                        alert('Link copied!');
+                    };
+                } else {
+                    content.innerHTML = '<div class="alert alert-warning">No email found</div>';
+                }
+            });
+    }
+    </script>
+    {% endif %}
+    
+    <!-- Notification System -->
+    {% if user.is_authenticated %}
+    <script>
+    let notificationInterval;
+    
+    function loadNotifications() {
+        fetch('/notifications/get/')
+            .then(response => response.json())
+            .then(data => {
+                updateNotificationBell(data.unread_count);
+                updateNotificationList(data.notifications);
+            })
+            .catch(error => console.error('Error loading notifications:', error));
+    }
+    
+    function updateNotificationBell(unreadCount) {
+        const badge = document.getElementById('notificationCount');
+        if (unreadCount > 0) {
+            badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+            badge.style.display = 'block';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+    
+    function updateNotificationList(notifications) {
+        const list = document.getElementById('notificationList');
+        
+        if (notifications.length === 0) {
+            list.innerHTML = `
+                <div class="text-center p-4 text-muted">
+                    <i class="bi bi-bell-slash display-4"></i>
+                    <p class="mt-2">No notifications</p>
+                </div>
+            `;
+            return;
+        }
+        
+        list.innerHTML = notifications.map(notification => `
+            <div class="notification-item p-3 border-bottom ${!notification.is_read ? 'bg-light' : ''}" data-id="${notification.id}">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center mb-1">
+                            <i class="bi bi-${getNotificationIcon(notification.type)} me-2 text-${getNotificationColor(notification.type)}"></i>
+                            <strong class="small">${notification.title}</strong>
+                            ${!notification.is_read ? '<span class="badge bg-primary ms-2">New</span>' : ''}
+                        </div>
+                        <p class="mb-1 small text-muted">${notification.message}</p>
+                        <small class="text-muted">${notification.created_at}</small>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="bi bi-three-dots"></i>
+                        </button>
+                        <ul class="dropdown-menu">
+                            ${!notification.is_read ? `<li><a class="dropdown-item" href="#" onclick="markNotificationRead('${notification.id}')">Mark as read</a></li>` : ''}
+                            <li><a class="dropdown-item text-danger" href="#" onclick="deleteNotification('${notification.id}')">Delete</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    function getNotificationIcon(type) {
+        const icons = {
+            'order': 'bag-check',
+            'payment': 'credit-card',
+            'chat': 'chat-dots',
+            'system': 'info-circle',
+            'vendor': 'shop',
+            'admin': 'shield-check'
+        };
+        return icons[type] || 'bell';
+    }
+    
+    function getNotificationColor(type) {
+        const colors = {
+            'order': 'success',
+            'payment': 'warning',
+            'chat': 'info',
+            'system': 'secondary',
+            'vendor': 'primary',
+            'admin': 'danger'
+        };
+        return colors[type] || 'secondary';
+    }
+    
+    function markNotificationRead(notificationId) {
+        fetch(`/notifications/${notificationId}/read/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadNotifications();
+            }
+        });
+    }
+    
+    function markAllNotificationsRead() {
+        fetch('/notifications/mark-all-read/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadNotifications();
+            }
+        });
+    }
+    
+    function deleteNotification(notificationId) {
+        if (confirm('Are you sure you want to delete this notification?')) {
+            fetch(`/notifications/${notificationId}/delete/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadNotifications();
+                }
+            });
+        }
+    }
+    
+    // Load notifications on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        loadNotifications();
+        // Refresh notifications every 30 seconds
+        notificationInterval = setInterval(loadNotifications, 30000);
+    });
+    
+    // Clean up interval when page unloads
+    window.addEventListener('beforeunload', function() {
+        if (notificationInterval) {
+            clearInterval(notificationInterval);
+        }
+    });
+    </script>
+    {% endif %}
+    
+    <!-- Advertisement tracking script -->
+    {% ad_tracking_script %}
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

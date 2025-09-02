@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+
+{% block title %}Shopping Cart - KABAADWALA™{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="bi bi-cart"></i> Shopping Cart ({{ cart.total_items }} items)</h4>
+                </div>
+                <div class="card-body">
+                    {% if cart_items %}
+                        {% for item in cart_items %}
+                        <div class="row border-bottom py-3" id="cart-item-{{ item.id }}">
+                            <div class="col-md-2">
+                                {% if item.product.images %}
+                                    <img src="{{ item.product.images.0 }}" alt="{{ item.product.title }}" class="img-fluid rounded">
+                                {% else %}
+                                    <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 80px;">
+                                        <i class="bi bi-image text-muted"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <h6>{{ item.product.title }}</h6>
+                                <small class="text-muted">{{ item.product.vendor.store_name }}</small>
+                                <div class="mt-1">
+                                    <span class="badge bg-secondary">{{ item.product.unit }}</span>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <strong>₹{{ item.product.price|floatformat:2 }}</strong>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="input-group input-group-sm">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="updateQuantity('{{ item.id }}', {{ item.quantity|add:'-1' }})">-</button>
+                                    <input type="number" class="form-control text-center" value="{{ item.quantity }}" min="1" id="qty-{{ item.id }}" onchange="updateQuantity('{{ item.id }}', this.value)">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="updateQuantity('{{ item.id }}', {{ item.quantity|add:'1' }})">+</button>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <strong>₹{{ item.total_price|floatformat:2 }}</strong>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="removeFromCart('{{ item.id }}')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-cart-x display-1 text-muted"></i>
+                            <h5 class="mt-3">Your cart is empty</h5>
+                            <p class="text-muted">Add some products to get started</p>
+                            <a href="{% url 'products:list' %}" class="btn btn-primary">
+                                <i class="bi bi-shop"></i> Continue Shopping
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        {% if cart_items %}
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal ({{ cart.total_items }} items)</span>
+                        <span>₹{{ cart.total_amount|floatformat:2 }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Delivery Charges</span>
+                        <span class="text-success">FREE</span>
+                    </div>
+                    
+                    <!-- Coupon Section -->
+                    <div class="mb-3">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="couponCode" placeholder="Enter coupon code">
+                            <button class="btn btn-outline-success" type="button" onclick="applyCoupon()">
+                                Apply
+                            </button>
+                        </div>
+                        <div id="couponMessage" class="mt-2"></div>
+                    </div>
+                    
+                    <div id="couponDiscount" class="d-flex justify-content-between mb-2 text-success" style="display: none !important;">
+                        <span>Coupon Discount</span>
+                        <span id="discountAmount">-₹0.00</span>
+                    </div>
+                    
+                    <hr>
+                    <div class="d-flex justify-content-between mb-3">
+                        <strong>Total Amount</strong>
+                        <strong id="finalTotal">₹{{ cart.total_amount|floatformat:2 }}</strong>
+                    </div>
+                    
+                    {% if user_wallet.current_balance >= cart.total_amount %}
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle"></i> Sufficient wallet balance
+                        </div>
+                        <a href="{% url 'orders:create' %}" class="btn btn-success w-100">
+                            <i class="bi bi-credit-card"></i> Proceed to Checkout
+                        </a>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i> Insufficient wallet balance<br>
+                            <small>Required: ₹{{ cart.total_amount|floatformat:2 }} | Available: ₹{{ user_wallet.current_balance|floatformat:2 }}</small>
+                        </div>
+                        <a href="{% url 'wallet:detail' %}" class="btn btn-warning w-100 mb-2">
+                            <i class="bi bi-wallet2"></i> Recharge Wallet
+                        </a>
+                        <button class="btn btn-outline-success w-100" disabled>
+                            <i class="bi bi-credit-card"></i> Proceed to Checkout
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Recommended Products -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6>You might also like</h6>
+                </div>
+                <div class="card-body">
+                    <!-- Add recommended products here -->
+                    <p class="text-muted small">Recommended products will appear here</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function updateQuantity(itemId, quantity) {
+    if (quantity < 1) {
+        removeFromCart(itemId);
+        return;
+    }
+    
+    fetch(`/products/cart/update/${itemId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: `quantity=${quantity}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+function removeFromCart(itemId) {
+    if (confirm('Remove this item from cart?')) {
+        fetch(`/products/cart/remove/${itemId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+}
+
+let appliedCoupon = null;
+let originalTotal = {{ cart.total_amount }};
+
+function applyCoupon() {
+    const couponCode = document.getElementById('couponCode').value.trim();
+    const messageDiv = document.getElementById('couponMessage');
+    
+    if (!couponCode) {
+        showCouponMessage('Please enter a coupon code', 'danger');
+        return;
+    }
+    
+    fetch('/coupons/validate/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({
+            code: couponCode,
+            order_amount: originalTotal
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.valid) {
+            appliedCoupon = data;
+            showCouponDiscount(data.discount);
+            showCouponMessage(data.message, 'success');
+            document.getElementById('couponCode').disabled = true;
+        } else {
+            showCouponMessage(data.message, 'danger');
+        }
+    })
+    .catch(error => {
+        showCouponMessage('Error validating coupon', 'danger');
+    });
+}
+
+function showCouponMessage(message, type) {
+    const messageDiv = document.getElementById('couponMessage');
+    messageDiv.innerHTML = `<div class="alert alert-${type} alert-sm py-2">${message}</div>`;
+}
+
+function showCouponDiscount(discount) {
+    const discountDiv = document.getElementById('couponDiscount');
+    const discountAmount = document.getElementById('discountAmount');
+    const finalTotal = document.getElementById('finalTotal');
+    
+    discountAmount.textContent = `-₹${discount.toFixed(2)}`;
+    discountDiv.style.display = 'flex';
+    
+    const newTotal = originalTotal - discount;
+    finalTotal.textContent = `₹${newTotal.toFixed(2)}`;
+}
+
+// Allow Enter key to apply coupon
+document.getElementById('couponCode').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        applyCoupon();
+    }
+});
+</script>
+{% endblock %}

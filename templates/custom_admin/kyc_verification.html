@@ -1,0 +1,146 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block page_title %}KYC Verification{% endblock %}
+{% block page_description %}Review and approve vendor KYC documents{% endblock %}
+
+{% block content %}
+<!-- Pending KYC -->
+<div class="card mb-4">
+    <div class="card-header bg-warning text-dark">
+        <h5 class="mb-0"><i class="bi bi-clock"></i> Pending KYC Verification ({{ pending_kyc.count }})</h5>
+    </div>
+    <div class="card-body">
+        {% if pending_kyc %}
+            {% for vendor in pending_kyc %}
+                <div class="row border-bottom py-3">
+                    <div class="col-md-3">
+                        <div class="d-flex align-items-center">
+                            {% if vendor.store_logo %}
+                                <img src="{{ vendor.store_logo.url }}" class="rounded-circle me-2" width="40" height="40">
+                            {% else %}
+                                <i class="bi bi-shop fs-3 text-muted me-2"></i>
+                            {% endif %}
+                            <div>
+                                <strong>{{ vendor.store_name }}</strong><br>
+                                <small class="text-muted">{{ vendor.user.username }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted">Business Details</small><br>
+                        <strong>{{ vendor.business_email }}</strong><br>
+                        <span>{{ vendor.business_phone }}</span>
+                    </div>
+                    <div class="col-md-2">
+                        <small class="text-muted">Submitted</small><br>
+                        <span>{{ vendor.created_at|date:"M d, Y" }}</span>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="btn-group w-100">
+                            <button class="btn btn-sm btn-outline-info" onclick="viewKYC('{{ vendor.id }}')">
+                                <i class="bi bi-eye"></i> View
+                            </button>
+                            <form method="post" action="{% url 'custom_admin:approve_kyc' vendor.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-success">
+                                    <i class="bi bi-check"></i> Approve
+                                </button>
+                            </form>
+                            <button class="btn btn-sm btn-danger" onclick="rejectKYC('{{ vendor.id }}')">
+                                <i class="bi bi-x"></i> Reject
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="text-center py-4">
+                <i class="bi bi-check-circle display-1 text-success"></i>
+                <h5 class="mt-3">All KYC applications reviewed!</h5>
+                <p class="text-muted">No pending KYC verifications at the moment.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Recent Approved -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-check-circle"></i> Recently Approved</h5>
+            </div>
+            <div class="card-body">
+                {% for vendor in approved_kyc %}
+                    <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                        <div>
+                            <strong>{{ vendor.store_name }}</strong><br>
+                            <small class="text-muted">{{ vendor.user.username }}</small>
+                        </div>
+                        <small class="text-muted">{{ vendor.updated_at|timesince }} ago</small>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="bi bi-x-circle"></i> Recently Rejected</h5>
+            </div>
+            <div class="card-body">
+                {% for vendor in rejected_kyc %}
+                    <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                        <div>
+                            <strong>{{ vendor.store_name }}</strong><br>
+                            <small class="text-muted">{{ vendor.kyc_rejection_reason|default:"No reason provided" }}</small>
+                        </div>
+                        <small class="text-muted">{{ vendor.updated_at|timesince }} ago</small>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reject KYC</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" id="rejectForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Rejection Reason</label>
+                        <textarea class="form-control" name="reason" rows="3" required 
+                                  placeholder="Please provide a clear reason for rejection..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Reject KYC</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function rejectKYC(vendorId) {
+    document.getElementById('rejectForm').action = `/admin-panel/kyc/reject/${vendorId}/`;
+    new bootstrap.Modal(document.getElementById('rejectModal')).show();
+}
+
+function viewKYC(vendorId) {
+    // Open KYC documents in new window
+    window.open(`/admin/vendors/vendor/${vendorId}/change/`, '_blank');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Coupon - KABAADWALA™{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="bi bi-ticket-perforated"></i> Create New Coupon</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Coupon Code *</label>
+                                <input type="text" class="form-control" name="code" required 
+                                       placeholder="e.g., SAVE20" style="text-transform: uppercase;">
+                                <div class="form-text">Use uppercase letters and numbers only</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Coupon Name *</label>
+                                <input type="text" class="form-control" name="name" required 
+                                       placeholder="e.g., 20% Off Sale">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" name="description" rows="2" 
+                                      placeholder="Brief description of the offer"></textarea>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Discount Type *</label>
+                                <select class="form-select" name="discount_type" id="discountType" required>
+                                    <option value="percentage">Percentage (%)</option>
+                                    <option value="fixed">Fixed Amount (₹)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Discount Value *</label>
+                                <input type="number" class="form-control" name="discount_value" 
+                                       step="0.01" min="0" required placeholder="e.g., 20">
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Maximum Discount (₹)</label>
+                                <input type="number" class="form-control" name="max_discount" 
+                                       step="0.01" min="0" placeholder="Optional for percentage discounts">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Minimum Order Amount (₹)</label>
+                                <input type="number" class="form-control" name="min_order_amount" 
+                                       step="0.01" min="0" value="0">
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Total Usage Limit</label>
+                                <input type="number" class="form-control" name="usage_limit" 
+                                       min="1" placeholder="Leave empty for unlimited">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Per User Limit</label>
+                                <input type="number" class="form-control" name="user_limit" 
+                                       min="1" value="1" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Valid From *</label>
+                                <input type="datetime-local" class="form-control" name="valid_from" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Valid Until *</label>
+                                <input type="datetime-local" class="form-control" name="valid_until" required>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle"></i> Create Coupon
+                            </button>
+                            <a href="{% url 'coupons:vendor_list' %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to List
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Set default dates
+document.addEventListener('DOMContentLoaded', function() {
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const nextMonth = new Date(now);
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    
+    document.querySelector('[name="valid_from"]').value = now.toISOString().slice(0, 16);
+    document.querySelector('[name="valid_until"]').value = nextMonth.toISOString().slice(0, 16);
+});
+</script>
+{% endblock %}

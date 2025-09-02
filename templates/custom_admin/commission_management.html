@@ -1,0 +1,167 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block page_title %}Commission Management{% endblock %}
+{% block page_description %}Manage commission rates and track earnings{% endblock %}
+
+{% block content %}
+<!-- Commission Overview -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h3>₹{{ total_commission|floatformat:2 }}</h3>
+                <p class="mb-0">Total Commission Earned</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <h3>{{ commission_rate }}%</h3>
+                <p class="mb-0">Current Commission Rate</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <h3>{{ commission_data|length }}</h3>
+                <p class="mb-0">Active Vendors</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Commission Settings -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-gear"></i> Commission Settings</h5>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-4">
+                    <label class="form-label">Global Commission Rate (%)</label>
+                    <input type="number" class="form-control" name="global_rate" 
+                           value="{{ commission_rate }}" step="0.1" min="0" max="50">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Category-specific Rate (%)</label>
+                    <select class="form-select" name="category">
+                        <option value="">Select Category</option>
+                        <!-- Categories would be populated here -->
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">New Rate (%)</label>
+                    <div class="input-group">
+                        <input type="number" class="form-control" name="new_rate" 
+                               step="0.1" min="0" max="50">
+                        <button type="submit" class="btn btn-primary">Update</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Vendor Commission Data -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-table"></i> Vendor Commission Breakdown</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Vendor</th>
+                        <th>Total Orders</th>
+                        <th>Total Revenue</th>
+                        <th>Commission Earned</th>
+                        <th>Commission Rate</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vendor in commission_data %}
+                        <tr>
+                            <td>
+                                <strong>{{ vendor.vendor__store_name }}</strong>
+                            </td>
+                            <td>{{ vendor.total_orders }}</td>
+                            <td>₹{{ vendor.total_revenue|floatformat:2 }}</td>
+                            <td>₹{{ vendor.commission_earned|floatformat:2 }}</td>
+                            <td>
+                                <span class="badge bg-info">{{ commission_rate }}%</span>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary" 
+                                            onclick="viewVendorDetails('{{ vendor.vendor__store_name }}')">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <button class="btn btn-outline-warning" 
+                                            onclick="adjustCommission('{{ vendor.vendor__store_name }}')">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Adjust Commission Modal -->
+<div class="modal fade" id="adjustCommissionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Adjust Commission Rate</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Vendor</label>
+                        <input type="text" class="form-control" id="vendorName" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">New Commission Rate (%)</label>
+                        <input type="number" class="form-control" name="vendor_rate" 
+                               step="0.1" min="0" max="50" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Reason for Change</label>
+                        <textarea class="form-control" name="reason" rows="2" 
+                                  placeholder="Optional reason for rate adjustment"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">Update Rate</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function adjustCommission(vendorName) {
+    document.getElementById('vendorName').value = vendorName;
+    new bootstrap.Modal(document.getElementById('adjustCommissionModal')).show();
+}
+
+function viewVendorDetails(vendorName) {
+    // This would open a detailed view of the vendor's commission history
+    console.log('Viewing details for:', vendorName);
+}
+</script>
+{% endblock %}

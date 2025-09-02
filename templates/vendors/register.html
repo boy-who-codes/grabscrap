@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}Become a Vendor - KABAADWALA™{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white text-center">
+                    <h4><i class="bi bi-shop"></i> Become a Vendor</h4>
+                    <p class="mb-0">Start selling on KABAADWALA™</p>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="store_name" class="form-label">Store Name *</label>
+                                <input type="text" class="form-control" id="store_name" name="store_name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="business_email" class="form-label">Business Email *</label>
+                                <input type="email" class="form-control" id="business_email" name="business_email" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="business_phone" class="form-label">Business Phone *</label>
+                                <input type="tel" class="form-control" id="business_phone" name="business_phone" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="store_logo" class="form-label">Store Logo</label>
+                                <input type="file" class="form-control" id="store_logo" name="store_logo" accept="image/*">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="store_description" class="form-label">Store Description</label>
+                            <textarea class="form-control" id="store_description" name="store_description" rows="3" placeholder="Tell customers about your store..."></textarea>
+                        </div>
+                        
+                        <h5 class="mb-3">Store Address</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="street" class="form-label">Street Address *</label>
+                                <input type="text" class="form-control" id="street" name="street" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="city" class="form-label">City *</label>
+                                <input type="text" class="form-control" id="city" name="city" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="state" class="form-label">State *</label>
+                                <input type="text" class="form-control" id="state" name="state" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="pincode" class="form-label">Pincode *</label>
+                                <input type="text" class="form-control" id="pincode" name="pincode" pattern="[0-9]{6}" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="terms" required>
+                            <label class="form-check-label" for="terms">
+                                I agree to the <a href="#" target="_blank">Vendor Terms & Conditions</a>
+                            </label>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-check-circle"></i> Register as Vendor
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5>What's Next?</h5>
+                    <ol>
+                        <li>Complete vendor registration</li>
+                        <li>Submit KYC documents for verification</li>
+                        <li>Wait for admin approval</li>
+                        <li>Start listing your products</li>
+                        <li>Receive orders and earn money!</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

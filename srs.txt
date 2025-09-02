@@ -1,0 +1,297 @@
+---
+
+# 📃 KABAADWALA™ – Enterprise System Requirements Specification (SRS)
+
+---
+
+## 🔍 **Overview**
+
+**KABAADWALA™** is a scalable, hyperlocal multi-vendor scrap marketplace. It connects buyers and scrap vendors within a configurable radius (default: 250km). Core features include:
+
+✅ Escrow-secured payments (manual/auto)
+✅ 2FA login security (email OTP)
+✅ Admin-managed radius filtering
+✅ Vendor KYC approval workflow
+✅ Real-time chat (order-level)
+✅ Analytics dashboards
+✅ Ads management (with CTR tracking)
+✅ Reporting & refunds
+✅ Mobile API readiness
+✅ Async background tasks (Celery + Redis)
+
+Designed for production at **Flipkart/Amazon scale** with ASGI (Uvicorn/Daphne), Celery, and scalable deployment.
+
+---
+
+## 👥 **User Roles**
+
+### 1️⃣ User (Buyer)
+
+* Email/username signup with **verification email**
+* Cannot log in unless email is verified
+* On login:
+
+  * If profile incomplete → redirect to **profile setup wizard**
+  * If verified → access dashboard
+* Can:
+
+  * Add/edit/delete **multiple delivery addresses**
+  * Set **default active address** (like Zomato)
+  * Browse products within radius
+  * Wishlist items
+  * Place orders (escrow payment)
+  * Track orders: *Ordered → Packed → Shipped → Delivered → Completed*
+  * Download PDF invoices
+  * Real-time chat with vendor (per order)
+  * Report abusive vendors/products
+  * View & reorder from order history
+
+---
+
+### 2️⃣ Vendor (Seller)
+
+* Email/username signup with **verification email**
+* KYC required for selling: Upload PAN, GSTIN, Bank details
+* Await admin approval for KYC
+* On login:
+
+  * If profile incomplete → redirect to **profile setup wizard**
+  * If KYC rejected → show reason and allow resubmission
+* Can:
+
+  * Manage store profile (logo, banner, address, contact)
+  * Add/edit/delete products (title, description, images, stock)
+  * View commissions (global/category/product level)
+  * Update order statuses step-by-step
+  * Export orders/products to CSV
+  * Chat with users per order
+  * Trigger refunds (pending admin approval)
+  * Access analytics dashboard:
+
+    * Total earnings
+    * Commissions deducted
+    * Best-selling products/categories
+    * Order statuses overview
+
+---
+
+### 3️⃣ Admin (Superuser)
+
+* Approve/reject vendor KYC
+* Suspend/ban users or vendors (toggle `is_banned`)
+* Global settings:
+
+  * Set search radius (default 250km)
+  * Set escrow mode (manual/auto)
+  * Set commission rates (global/category/product)
+* Override vendor product prices
+* Approve payout requests (manual mode)
+* Manage ads:
+
+  * Upload banners/images
+  * Schedule start/end dates
+  * Track impressions & CTR
+* Full analytics:
+
+  * Sales, refunds, commissions
+  * Region heatmaps
+  * Top buyers/vendors
+  * Pending payouts
+* Moderate user/vendor/product reports
+* Manage push/email/SMS notifications
+* Audit logs: login history & admin actions
+
+---
+
+## 🔑 **Authentication Flow**
+
+1. **Signup (User/Vendor)**
+
+   * Fields:
+
+     * Username (real-time availability check like Instagram)
+     * Email
+     * Password (strong password validation)
+   * On submit:
+
+     * Send **activation email** via Celery
+     * User status: `is_active=False`, `is_verified=False`
+2. **Login**
+
+   * If `is_verified=False`:
+
+     * Block login
+     * Show: *"Please verify your email to continue"*
+     * Button: **Resend Activation Email**
+   * If `is_banned=True`:
+
+     * Block login
+     * Show: *"Your account has been suspended. Contact support."*
+3. **2FA Login**
+
+   * After password:
+
+     * Send OTP to registered email
+     * Input OTP → verify → grant access
+4. **Force Profile Setup**
+
+   * On first verified login:
+
+     * Redirect to step-by-step profile wizard:
+
+       * Phase 1: Name, phone, photo
+       * Phase 2: Address (multiple)
+       * Phase 3: Preferences
+   * Cannot access dashboard until completed
+
+---
+
+## 📍 **Profile & Address Fields (Amazon/Flipkart Style)**
+
+### User:
+
+| Field                | Required | Notes                                                                                         |
+| -------------------- | -------- | --------------------------------------------------------------------------------------------- |
+| Full Name            | ✅        |                                                                                               |
+| Mobile Number        | ✅        | OTP validation optional                                                                       |
+| Profile Photo        | ❌        | Optional                                                                                      |
+| Addresses (Multiple) | ✅        | Each with: name, phone, flat, street, landmark, city, pincode, state, country, default toggle |
+| Active Address       | ✅        | Default used for radius-based filtering                                                       |
+
+### Vendor:
+
+| Field                | Required | Notes                              |
+| -------------------- | -------- | ---------------------------------- |
+| Store Name           | ✅        | Unique constraint                  |
+| Store Logo           | ✅        | Recommended dimensions specified   |
+| Business Email       | ✅        | Verified                           |
+| Business Phone       | ✅        |                                    |
+| Store Address        | ✅        | Manual input + optional map picker |
+| PAN                  | ✅        | File upload (.jpg/.pdf)            |
+| GSTIN                | ✅        | File upload                        |
+| Bank Account Details | ✅        | Account number, IFSC, holder name  |
+
+---
+
+## 🛒 **Order Lifecycle**
+
+```
+Ordered → Packed → Shipped → Out for Delivery → Delivered → Completed
+```
+
+* Each stage triggers:
+
+  * Email + SMS notifications (Celery)
+  * Status update visible to user & vendor
+* Escrow:
+
+  * Auto-release after delivery confirmation
+  * Manual release by admin if disputes arise
+* Refunds:
+
+  * Vendor can request → admin approves → funds returned
+
+---
+
+## 💬 **Real-Time Chat**
+
+* WebSocket (Django Channels/ASGI)
+* Chat available **per order** (user ↔ vendor)
+* Features:
+
+  * Typing indicators
+  * File/image attachments
+  * Admin monitoring & moderation
+
+---
+
+## 📊 **Analytics**
+
+* Vendor dashboard:
+
+  * Total sales, pending payouts, product performance
+* Admin dashboard:
+
+  * Heatmaps of user activity
+  * Top categories/products/vendors
+  * Refund statistics
+
+---
+
+## 📢 **Advertising**
+
+* Admin uploads banners
+* Schedule with start/end dates
+* Analytics: impressions & click-through rates
+* Auto-remove expired ads (Celery task)
+
+---
+
+## 📦 **API & Mobile Readiness**
+
+* REST API (Django REST Framework + JWT)
+* Rate limiting
+* Swagger documentation
+* Ready for Android/iOS consumption
+
+---
+
+## 📬 **Email Templates**
+
+| Event               | Template Name            |
+| ------------------- | ------------------------ |
+| Account Activation  | `activation_email.html`  |
+| Resend Activation   | `resend_activation.html` |
+| 2FA OTP             | `otp_email.html`         |
+| Password Reset      | `password_reset.html`    |
+| KYC Status Update   | `kyc_status.html`        |
+| Order Placed        | `order_placed.html`      |
+| Order Status Update | `order_update.html`      |
+| Refund Processed    | `refund_email.html`      |
+| New Chat Message    | `chat_alert.html`        |
+| Account Banned      | `ban_notice.html`        |
+
+---
+
+## 🔒 **Security**
+
+* HTTPS (SSL)
+* CSRF/XSS/SQLi protections
+* Rate limiting & brute-force protection
+* Secure file uploads
+* Admin OTP for sensitive actions (Phase 2)
+
+---
+
+## 🚀 Deployment Stack
+
+| Component            | Stack                     |
+| -------------------- | ------------------------- |
+| Backend              | Django + DRF              |
+| Real-time Features   | Django Channels + ASGI    |
+| Async Tasks          | Celery + Redis            |
+| Database             | PostgreSQL                |
+| Web Server           | Uvicorn/Daphne + Gunicorn |
+| Reverse Proxy        | Nginx                     |
+| SSL                  | Certbot                   |
+| Static/Media Storage | S3/DO Spaces              |
+| Monitoring           | Sentry, Prometheus        |
+| Backups              | Daily cron jobs           |
+
+---
+
+# 🏁 Closing
+
+This SRS is **production-grade** and AI-IDE ready. It defines:
+✅ Auth flow (email verification, 2FA, force profile setup)
+✅ Hyperlocal radius filtering
+✅ Admin-first moderation tools
+✅ Celery/Redis powered async operations
+✅ API-first architecture for mobile readiness
+
+---
+
+Do you want me to:
+✅ Export this as **clean Markdown/PDF/Word for Cursor**?
+✅ Or give you a **prompt pack for Qwen/Continue/Cursor** to rewrite any repo with this SRS?
+✅ Or BOTH? Which one?

@@ -1,0 +1,298 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block content %}
+<!-- Enhanced Stats Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card stat-card border-left-primary">
+            <div class="card-body d-flex align-items-center">
+                <div class="stat-icon bg-primary text-white me-3">
+                    <i class="bi bi-people"></i>
+                </div>
+                <div>
+                    <h4 class="mb-0">{{ stats.total_users }}</h4>
+                    <small class="text-muted">Total Users</small>
+                    <div class="text-success small">
+                        <i class="bi bi-arrow-up"></i> +{{ stats.new_users_today }} today
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card stat-card border-left-success">
+            <div class="card-body d-flex align-items-center">
+                <div class="stat-icon bg-success text-white me-3">
+                    <i class="bi bi-currency-rupee"></i>
+                </div>
+                <div>
+                    <h4 class="mb-0">₹{{ revenue_data.total_revenue|default:0|floatformat:0 }}</h4>
+                    <small class="text-muted">Total Revenue</small>
+                    <div class="text-info small">
+                        <i class="bi bi-graph-up"></i> ₹{{ total_commission|floatformat:0 }} commission
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card stat-card border-left-info">
+            <div class="card-body d-flex align-items-center">
+                <div class="stat-icon bg-info text-white me-3">
+                    <i class="bi bi-box-seam"></i>
+                </div>
+                <div>
+                    <h4 class="mb-0">{{ stats.total_orders }}</h4>
+                    <small class="text-muted">Total Orders</small>
+                    <div class="text-warning small">
+                        <i class="bi bi-clock"></i> {{ stats.pending_orders }} pending
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card stat-card border-left-warning">
+            <div class="card-body d-flex align-items-center">
+                <div class="stat-icon bg-warning text-white me-3">
+                    <i class="bi bi-shield-lock"></i>
+                </div>
+                <div>
+                    <h4 class="mb-0">₹{{ escrow_stats.held_amount|default:0|floatformat:0 }}</h4>
+                    <small class="text-muted">Escrow Held</small>
+                    <div class="text-danger small">
+                        <i class="bi bi-exclamation-triangle"></i> {{ escrow_stats.pending_release }} pending release
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Cards Row -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card border-warning">
+            <div class="card-body text-center">
+                <h3 class="text-warning">{{ stats.pending_kyc }}</h3>
+                <small>Pending KYC</small>
+                <div class="mt-2">
+                    <a href="{% url 'custom_admin:kyc_verification' %}" class="btn btn-sm btn-warning">
+                        <i class="bi bi-file-earmark-check"></i> Review
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card border-danger">
+            <div class="card-body text-center">
+                <h3 class="text-danger">{{ stats.flagged_messages }}</h3>
+                <small>Flagged Messages</small>
+                <div class="mt-2">
+                    <a href="{% url 'custom_admin:chat_moderation' %}" class="btn btn-sm btn-danger">
+                        <i class="bi bi-chat-square-dots"></i> Moderate
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card border-info">
+            <div class="card-body text-center">
+                <h3 class="text-info">{{ escrow_stats.pending_release }}</h3>
+                <small>Pending Escrow</small>
+                <div class="mt-2">
+                    <a href="{% url 'custom_admin:escrow_management' %}" class="btn btn-sm btn-info">
+                        <i class="bi bi-shield-lock"></i> Release
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card border-success">
+            <div class="card-body text-center">
+                <h3 class="text-success">{{ wallet_stats.total_recharges|default:0|floatformat:0 }}</h3>
+                <small>Wallet Recharges</small>
+                <div class="mt-2">
+                    <span class="badge bg-success">{{ wallet_stats.total_transactions }} transactions</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts and Analytics Row -->
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-graph-up"></i> Revenue Analytics</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="revenueChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Order Status</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="orderStatusChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Data Tables Row -->
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-clock-history"></i> Recent Orders</h5>
+                <a href="{% url 'custom_admin:escrow_management' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if recent_orders %}
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Order</th>
+                                    <th>Customer</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in recent_orders %}
+                                <tr>
+                                    <td>
+                                        <strong>#{{ order.order_number }}</strong><br>
+                                        <small class="text-muted">{{ order.vendor.store_name }}</small>
+                                    </td>
+                                    <td>{{ order.user.username }}</td>
+                                    <td>₹{{ order.total_amount|floatformat:2 }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if order.order_status == 'delivered' %}success{% elif order.order_status == 'shipped' %}info{% else %}warning{% endif %}">
+                                            {{ order.get_order_status_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">No recent orders</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-shield-exclamation"></i> Pending Escrow Releases</h5>
+                <a href="{% url 'custom_admin:escrow_management' %}" class="btn btn-sm btn-outline-warning">Manage</a>
+            </div>
+            <div class="card-body">
+                {% if pending_escrow %}
+                    {% for order in pending_escrow %}
+                        <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                            <div>
+                                <strong>#{{ order.order_number }}</strong><br>
+                                <small class="text-muted">{{ order.vendor.store_name }}</small>
+                            </div>
+                            <div class="text-end">
+                                <strong class="text-success">₹{{ order.total_amount|floatformat:2 }}</strong><br>
+                                <small class="text-muted">{{ order.updated_at|timesince }} ago</small>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-3">
+                        <i class="bi bi-check-circle display-4 text-success"></i>
+                        <p class="text-muted mt-2">No pending escrow releases</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Revenue Chart
+const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+const dailyOrders = {{ daily_orders|safe }};
+
+new Chart(revenueCtx, {
+    type: 'line',
+    data: {
+        labels: dailyOrders.map(d => d.day),
+        datasets: [{
+            label: 'Revenue',
+            data: dailyOrders.map(d => d.revenue || 0),
+            borderColor: '#198754',
+            backgroundColor: 'rgba(25, 135, 84, 0.1)',
+            tension: 0.4
+        }, {
+            label: 'Orders',
+            data: dailyOrders.map(d => d.count || 0),
+            borderColor: '#0d6efd',
+            backgroundColor: 'rgba(13, 110, 253, 0.1)',
+            tension: 0.4,
+            yAxisID: 'y1'
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                type: 'linear',
+                display: true,
+                position: 'left',
+            },
+            y1: {
+                type: 'linear',
+                display: true,
+                position: 'right',
+                grid: {
+                    drawOnChartArea: false,
+                },
+            }
+        }
+    }
+});
+
+// Order Status Pie Chart
+const statusCtx = document.getElementById('orderStatusChart').getContext('2d');
+new Chart(statusCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Pending', 'Processing', 'Delivered', 'Cancelled'],
+        datasets: [{
+            data: [{{ stats.pending_orders }}, 20, 45, 5],
+            backgroundColor: ['#ffc107', '#0dcaf0', '#198754', '#dc3545']
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false
+    }
+});
+</script>
+{% endblock %}

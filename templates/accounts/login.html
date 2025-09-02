@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - KABAADWALA™{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow">
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <h2 class="text-success">KABAADWALA™</h2>
+                        <p class="text-muted">
+                            {% if step == '2' %}
+                                Enter Verification Code
+                            {% else %}
+                                Sign in to your account
+                            {% endif %}
+                        </p>
+                    </div>
+
+                    {% if step == '2' %}
+                        <!-- Step 2: OTP Verification -->
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="step" value="2">
+                            
+                            <div class="mb-3 text-center">
+                                <i class="bi bi-shield-check display-1 text-success"></i>
+                                <p class="mt-2">We've sent a 6-digit verification code to:</p>
+                                <strong>{{ email_hint }}</strong>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="otp_code" class="form-label">Verification Code</label>
+                                <input type="text" class="form-control form-control-lg text-center" 
+                                       id="otp_code" name="otp_code" maxlength="6" 
+                                       placeholder="000000" required autofocus
+                                       style="letter-spacing: 0.5em; font-size: 1.5rem;">
+                                <div class="form-text">Enter the 6-digit code from your email</div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-success btn-lg w-100 mb-3">
+                                <i class="bi bi-check-circle"></i> Verify & Login
+                            </button>
+                            
+                            <div class="text-center">
+                                <a href="{% url 'accounts:login' %}" class="text-muted">
+                                    <i class="bi bi-arrow-left"></i> Back to login
+                                </a>
+                            </div>
+                        </form>
+                    {% else %}
+                        <!-- Step 1: Username/Password -->
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="step" value="1">
+                            
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Email or Username</label>
+                                <input type="text" class="form-control" id="username" name="username" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-success btn-lg w-100 mb-3">
+                                <i class="bi bi-box-arrow-in-right"></i> Continue
+                            </button>
+                            
+                            <div class="text-center">
+                                <a href="{% url 'accounts:signup' %}" class="text-decoration-none">
+                                    Don't have an account? <strong>Sign up</strong>
+                                </a>
+                            </div>
+                        </form>
+                    {% endif %}
+                    
+                    {% if step == '2' %}
+                        <div class="alert alert-info mt-3">
+                            <small>
+                                <i class="bi bi-info-circle"></i>
+                                Code expires in 10 minutes. Didn't receive it? Check your spam folder.
+                            </small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% if step == '1' %}
+                <div class="text-center mt-3">
+                    <small class="text-muted">
+                        🔒 Your account is protected with two-factor authentication
+                    </small>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+{% if step == '2' %}
+// Auto-format OTP input
+document.getElementById('otp_code').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length > 6) value = value.slice(0, 6);
+    e.target.value = value;
+});
+
+// Auto-submit when 6 digits entered
+document.getElementById('otp_code').addEventListener('input', function(e) {
+    if (e.target.value.length === 6) {
+        setTimeout(() => {
+            e.target.form.submit();
+        }, 500);
+    }
+});
+{% endif %}
+</script>
+{% endblock %}

@@ -1,0 +1,217 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block page_title %}Escrow Management{% endblock %}
+{% block page_description %}Manage escrow payments and releases{% endblock %}
+
+{% block content %}
+<!-- Escrow Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <h3>₹{{ escrow_stats.total_held|default:0|floatformat:0 }}</h3>
+                <p class="mb-0">Total Held</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h3>₹{{ escrow_stats.total_released|default:0|floatformat:0 }}</h3>
+                <p class="mb-0">Total Released</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <h3>{{ escrow_stats.pending_count }}</h3>
+                <p class="mb-0">Pending Release</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body text-center">
+                <h3>{{ escrow_stats.disputed_count }}</h3>
+                <p class="mb-0">Disputed Orders</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pending Escrow Releases -->
+<div class="card mb-4">
+    <div class="card-header bg-warning text-dark">
+        <h5 class="mb-0"><i class="bi bi-clock"></i> Pending Escrow Releases ({{ pending_release.count }})</h5>
+    </div>
+    <div class="card-body">
+        {% if pending_release %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Order</th>
+                            <th>Customer</th>
+                            <th>Vendor</th>
+                            <th>Amount</th>
+                            <th>Delivered</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in pending_release %}
+                        <tr>
+                            <td>
+                                <strong>#{{ order.order_number }}</strong><br>
+                                <small class="text-muted">{{ order.created_at|date:"M d, Y" }}</small>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-person-circle fs-4 text-muted me-2"></i>
+                                    <div>
+                                        <strong>{{ order.user.full_name|default:order.user.username }}</strong><br>
+                                        <small class="text-muted">{{ order.user.email }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <strong>{{ order.vendor.store_name }}</strong><br>
+                                <small class="text-muted">{{ order.vendor.business_email }}</small>
+                            </td>
+                            <td>
+                                <strong class="text-success">₹{{ order.total_amount|floatformat:2 }}</strong><br>
+                                <small class="text-muted">Commission: ₹{{ order.total_amount|floatformat:2|mul:0.05 }}</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-success">{{ order.get_order_status_display }}</span><br>
+                                <small class="text-muted">{{ order.updated_at|timesince }} ago</small>
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <form method="post" action="{% url 'custom_admin:release_escrow' order.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-success btn-sm" 
+                                                onclick="return confirm('Release payment to vendor?')">
+                                            <i class="bi bi-check-circle"></i> Release
+                                        </button>
+                                    </form>
+                                    <button class="btn btn-danger btn-sm" onclick="disputeOrder('{{ order.id }}')">
+                                        <i class="bi bi-exclamation-triangle"></i> Dispute
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-4">
+                <i class="bi bi-check-circle display-1 text-success"></i>
+                <h5 class="mt-3">No pending escrow releases!</h5>
+                <p class="text-muted">All delivered orders have been processed.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Disputed Orders -->
+{% if disputed_orders %}
+<div class="card">
+    <div class="card-header bg-danger text-white">
+        <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Disputed Orders ({{ disputed_orders.count }})</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Order</th>
+                        <th>Customer</th>
+                        <th>Vendor</th>
+                        <th>Amount</th>
+                        <th>Dispute Reason</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in disputed_orders %}
+                    <tr>
+                        <td>
+                            <strong>#{{ order.order_number }}</strong><br>
+                            <small class="text-muted">{{ order.created_at|date:"M d, Y" }}</small>
+                        </td>
+                        <td>{{ order.user.username }}</td>
+                        <td>{{ order.vendor.store_name }}</td>
+                        <td>₹{{ order.total_amount|floatformat:2 }}</td>
+                        <td>
+                            <small class="text-muted">{{ order.notes|default:"No reason provided" }}</small>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-success" onclick="resolveDispute('{{ order.id }}', 'release')">
+                                    Release
+                                </button>
+                                <button class="btn btn-outline-danger" onclick="resolveDispute('{{ order.id }}', 'refund')">
+                                    Refund
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Dispute Modal -->
+<div class="modal fade" id="disputeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Dispute Order</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" id="disputeForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Dispute Reason</label>
+                        <textarea class="form-control" name="reason" rows="3" required 
+                                  placeholder="Please provide a reason for disputing this order..."></textarea>
+                    </div>
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        This will mark the order as disputed and prevent automatic payment release.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Mark as Disputed</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function disputeOrder(orderId) {
+    document.getElementById('disputeForm').action = `/admin-panel/escrow/dispute/${orderId}/`;
+    new bootstrap.Modal(document.getElementById('disputeModal')).show();
+}
+
+function resolveDispute(orderId, action) {
+    const actionText = action === 'release' ? 'release payment to vendor' : 'refund to customer';
+    if (confirm(`Are you sure you want to ${actionText}?`)) {
+        // This would make an AJAX call to resolve the dispute
+        console.log(`Resolving dispute for order ${orderId} with action ${action}`);
+        location.reload();
+    }
+}
+</script>
+{% endblock %}

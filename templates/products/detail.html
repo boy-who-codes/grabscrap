@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ product.title }} - KABAADWALA™{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row">
+        <div class="col-md-6">
+            <!-- Product Image -->
+            <div class="card">
+                {% if product.images %}
+                    <img src="{{ product.images.0 }}" class="card-img-top" alt="{{ product.title }}" style="height: 400px; object-fit: cover;">
+                {% else %}
+                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 400px;">
+                        <i class="bi bi-image display-1 text-muted"></i>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h2>{{ product.title }}</h2>
+                    <p class="text-muted">{{ product.vendor.store_name }}</p>
+                    
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <h3 class="text-success">₹{{ product.price|floatformat:2 }}</h3>
+                            <small class="text-muted">per {{ product.unit }}</small>
+                        </div>
+                        <div class="col-6 text-end">
+                            <span class="badge bg-primary">{{ product.category.name }}</span>
+                            {% if product.is_featured %}
+                                <span class="badge bg-warning">Featured</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Description:</strong>
+                        <p>{{ product.description }}</p>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <strong>Stock:</strong> {{ product.stock_quantity }} {{ product.unit }}
+                        </div>
+                        <div class="col-6">
+                            <strong>Min Order:</strong> {{ product.minimum_order_quantity }} {{ product.unit }}
+                        </div>
+                    </div>
+                    
+                    {% if product.specifications %}
+                    <div class="mb-3">
+                        <strong>Specifications:</strong>
+                        <ul class="list-unstyled">
+                            {% for key, value in product.specifications.items %}
+                            <li><strong>{{ key|title }}:</strong> {{ value }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    
+                    {% if user.is_authenticated %}
+                    <div class="row">
+                        <div class="col-md-4 mb-2">
+                            <label for="quantity" class="form-label">Quantity</label>
+                            <input type="number" class="form-control" id="quantity" value="{{ product.minimum_order_quantity }}" min="{{ product.minimum_order_quantity }}" max="{{ product.stock_quantity }}">
+                        </div>
+                        <div class="col-md-8 mb-2">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-flex gap-2">
+                                <form method="post" action="{% url 'products:add_to_cart' product.id %}" class="flex-grow-1">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="quantity" id="cart-quantity" value="{{ product.minimum_order_quantity }}">
+                                    <button type="submit" class="btn btn-success w-100">
+                                        <i class="bi bi-cart-plus"></i> Add to Cart
+                                    </button>
+                                </form>
+                                <button class="btn btn-outline-danger" onclick="toggleWishlist('{{ product.id }}')">
+                                    <i class="bi bi-heart{% if in_wishlist %}-fill{% endif %}"></i>
+                                </button>
+                                <button class="btn btn-outline-primary" onclick="startChat('{{ product.id }}')">
+                                    <i class="bi bi-chat"></i> Chat
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <a href="{% url 'accounts:login' %}">Login</a> to add this product to your cart
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Related Products -->
+    {% if related_products %}
+    <div class="row mt-5">
+        <div class="col-12">
+            <h4>Related Products</h4>
+            <div class="row">
+                {% for product in related_products %}
+                <div class="col-md-3 mb-3">
+                    <div class="card h-100">
+                        {% if product.images %}
+                            <img src="{{ product.images.0 }}" class="card-img-top" alt="{{ product.title }}" style="height: 150px; object-fit: cover;">
+                        {% else %}
+                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 150px;">
+                                <i class="bi bi-image text-muted"></i>
+                            </div>
+                        {% endif %}
+                        <div class="card-body">
+                            <h6 class="card-title">{{ product.title|truncatechars:30 }}</h6>
+                            <p class="text-success">₹{{ product.price|floatformat:2 }}</p>
+                            <a href="{% url 'products:detail' product.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.getElementById('quantity').addEventListener('change', function() {
+    document.getElementById('cart-quantity').value = this.value;
+});
+
+function toggleWishlist(productId) {
+    fetch(`/products/api/${productId}/wishlist/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.in_wishlist) {
+            document.querySelector('.bi-heart').classList.add('bi-heart-fill');
+            document.querySelector('.bi-heart').classList.remove('bi-heart');
+        } else {
+            document.querySelector('.bi-heart-fill').classList.add('bi-heart');
+            document.querySelector('.bi-heart-fill').classList.remove('bi-heart-fill');
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+function startChat(productId) {
+    // Create or get chat room for this product
+    fetch(`/chat/api/products/${productId}/chat/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.room_id) {
+            window.location.href = `/chat/dashboard/${data.room_id}/`;
+        } else if (data.error) {
+            alert(data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to start chat. Please try again.');
+    });
+}
+</script>
+{% endblock %}

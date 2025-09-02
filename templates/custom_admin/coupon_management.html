@@ -1,0 +1,228 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block page_title %}Coupon Management{% endblock %}
+{% block page_description %}Manage global and vendor coupons{% endblock %}
+
+{% block content %}
+<!-- Quick Stats -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h3>{{ active_coupons.count }}</h3>
+                <p class="mb-0">Active Coupons</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <h3>{{ expired_coupons.count }}</h3>
+                <p class="mb-0">Expired Coupons</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <h3>{{ coupon_stats|length }}</h3>
+                <p class="mb-0">Used Coupons</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <h3>₹{% for stat in coupon_stats %}{{ stat.total_discount|add:0 }}{% endfor %}</h3>
+                <p class="mb-0">Total Discounts</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Active Coupons -->
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-ticket-perforated"></i> Active Coupons</h5>
+        <a href="/admin/coupons/coupon/add/" class="btn btn-success btn-sm">
+            <i class="bi bi-plus"></i> Create Global Coupon
+        </a>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Discount</th>
+                        <th>Usage</th>
+                        <th>Valid Until</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for coupon in active_coupons %}
+                        <tr>
+                            <td>
+                                <code class="bg-light p-1">{{ coupon.code }}</code>
+                            </td>
+                            <td>{{ coupon.name }}</td>
+                            <td>
+                                {% if coupon.coupon_type == 'global' %}
+                                    <span class="badge bg-primary">Global</span>
+                                {% else %}
+                                    <span class="badge bg-info">{{ coupon.vendor.store_name }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if coupon.discount_type == 'percentage' %}
+                                    {{ coupon.discount_value }}%
+                                    {% if coupon.max_discount %}
+                                        (Max ₹{{ coupon.max_discount }})
+                                    {% endif %}
+                                {% else %}
+                                    ₹{{ coupon.discount_value }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ coupon.used_count }}
+                                {% if coupon.usage_limit %}
+                                    / {{ coupon.usage_limit }}
+                                {% endif %}
+                            </td>
+                            <td>{{ coupon.valid_until|date:"M d, Y" }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="/admin/coupons/coupon/{{ coupon.id }}/change/" 
+                                       class="btn btn-outline-primary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <button class="btn btn-outline-danger" 
+                                            onclick="deactivateCoupon('{{ coupon.id }}')">
+                                        <i class="bi bi-x"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Coupon Usage Statistics -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-graph-up"></i> Top Performing Coupons</h5>
+            </div>
+            <div class="card-body">
+                {% for stat in coupon_stats %}
+                    <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                        <div>
+                            <strong>{{ stat.coupon__code }}</strong><br>
+                            <small class="text-muted">{{ stat.coupon__name }}</small>
+                        </div>
+                        <div class="text-end">
+                            <strong>{{ stat.usage_count }} uses</strong><br>
+                            <small class="text-success">₹{{ stat.total_discount|floatformat:2 }} saved</small>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-clock-history"></i> Recently Expired</h5>
+            </div>
+            <div class="card-body">
+                {% for coupon in expired_coupons %}
+                    <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                        <div>
+                            <strong>{{ coupon.code }}</strong><br>
+                            <small class="text-muted">{{ coupon.name }}</small>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-secondary">Expired</span><br>
+                            <small class="text-muted">{{ coupon.valid_until|date:"M d" }}</small>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Coupon Modal -->
+<div class="modal fade" id="createCouponModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create Global Coupon</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Coupon Code</label>
+                            <input type="text" class="form-control" name="code" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Coupon Name</label>
+                            <input type="text" class="form-control" name="name" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Discount Type</label>
+                            <select class="form-select" name="discount_type" required>
+                                <option value="percentage">Percentage</option>
+                                <option value="fixed">Fixed Amount</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Discount Value</label>
+                            <input type="number" class="form-control" name="discount_value" 
+                                   step="0.01" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Valid From</label>
+                            <input type="datetime-local" class="form-control" name="valid_from" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Valid Until</label>
+                            <input type="datetime-local" class="form-control" name="valid_until" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Create Coupon</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function deactivateCoupon(couponId) {
+    if (confirm('Deactivate this coupon?')) {
+        // Make AJAX call to deactivate coupon
+        console.log('Deactivating coupon:', couponId);
+    }
+}
+</script>
+{% endblock %}

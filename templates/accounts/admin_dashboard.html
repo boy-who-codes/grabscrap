@@ -1,0 +1,432 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - KABAADWALA™{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        {% if user.profile_photo %}
+                            <img src="{{ user.profile_photo.url }}" alt="Profile" class="rounded-circle mb-2" width="80" height="80">
+                        {% else %}
+                            <i class="bi bi-shield-check display-3 text-warning"></i>
+                        {% endif %}
+                        <h6>{% if user.full_name %}{{ user.full_name }}{% else %}{{ user.username }}{% endif %}</h6>
+                        <small class="text-muted">{{ user.email }}</small>
+                        <div class="mt-2">
+                            <span class="badge bg-warning">{{ user_type }}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Navigation -->
+                    <div class="list-group list-group-flush">
+                        <a href="{% url 'accounts:admin_dashboard' %}" class="list-group-item list-group-item-action active">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                        <a href="{% url 'custom_admin:dashboard' %}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-gear"></i> Admin Panel
+                        </a>
+                        <a href="#kycSection" class="list-group-item list-group-item-action">
+                            <i class="bi bi-file-earmark-check"></i> KYC Verification
+                            {% if pending_kyc > 0 %}
+                                <span class="badge bg-warning ms-2">{{ pending_kyc }}</span>
+                            {% endif %}
+                        </a>
+                        <a href="#chatModeration" class="list-group-item list-group-item-action">
+                            <i class="bi bi-chat-square-dots"></i> Chat Moderation
+                            {% if flagged_messages > 0 %}
+                                <span class="badge bg-danger ms-2">{{ flagged_messages }}</span>
+                            {% endif %}
+                        </a>
+                        <a href="{% url 'orders:list' %}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-box-seam"></i> All Orders
+                        </a>
+                        <a href="{% url 'products:list' %}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-grid-3x3-gap"></i> All Products
+                        </a>
+                        <a href="{% url 'accounts:profile' %}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-person"></i> Profile Settings
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Admin Dashboard</h2>
+                <a href="{% url 'custom_admin:dashboard' %}" class="btn btn-warning">
+                    <i class="bi bi-gear"></i> Admin Panel
+                </a>
+            </div>
+            
+            <!-- User Stats -->
+            <h4>User Statistics</h4>
+            <div class="row mb-4">
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>{{ user_stats.total_users }}</h4>
+                                    <small>Total Users</small>
+                                </div>
+                                <i class="bi bi-people display-6"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>{{ user_stats.total_customers }}</h4>
+                                    <small>Customers</small>
+                                </div>
+                                <i class="bi bi-person display-6"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>{{ user_stats.total_vendors }}</h4>
+                                    <small>Vendors</small>
+                                </div>
+                                <i class="bi bi-shop display-6"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>{{ user_stats.verified_users }}</h4>
+                                    <small>Verified</small>
+                                </div>
+                                <i class="bi bi-check-circle display-6"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Order Stats -->
+            <h4>Order Statistics</h4>
+            <div class="row mb-4">
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-secondary text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>{{ order_stats.total_orders }}</h4>
+                                    <small>Total Orders</small>
+                                </div>
+                                <i class="bi bi-box-seam display-6"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>{{ order_stats.pending_orders }}</h4>
+                                    <small>Pending</small>
+                                </div>
+                                <i class="bi bi-clock display-6"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>{{ order_stats.completed_orders }}</h4>
+                                    <small>Completed</small>
+                                </div>
+                                <i class="bi bi-check-circle display-6"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-dark text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>₹{{ order_stats.total_revenue|floatformat:2 }}</h4>
+                                    <small>Total Revenue</small>
+                                </div>
+                                <i class="bi bi-currency-rupee display-6"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- KYC Verification Section -->
+            <div id="kycSection" class="mb-5">
+                <h4>KYC Verification</h4>
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="card bg-warning text-white">
+                            <div class="card-body text-center">
+                                <h3>{{ kyc_stats.pending }}</h3>
+                                <small>Pending KYC</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-success text-white">
+                            <div class="card-body text-center">
+                                <h3>{{ kyc_stats.approved }}</h3>
+                                <small>Approved</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-danger text-white">
+                            <div class="card-body text-center">
+                                <h3>{{ kyc_stats.rejected }}</h3>
+                                <small>Rejected</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Pending KYC Verifications</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if pending_kyc_list %}
+                            {% for vendor in pending_kyc_list %}
+                            <div class="d-flex justify-content-between align-items-center border-bottom py-3">
+                                <div>
+                                    <strong>{{ vendor.store_name }}</strong><br>
+                                    <small class="text-muted">{{ vendor.user.email }}</small><br>
+                                    <small class="text-muted">Submitted: {{ vendor.kyc_submitted_at|date:"M d, Y" }}</small>
+                                </div>
+                                <div>
+                                    <button class="btn btn-success btn-sm" onclick="updateKYC('{{ vendor.id }}', 'approved')">
+                                        <i class="bi bi-check"></i> Approve
+                                    </button>
+                                    <button class="btn btn-danger btn-sm" onclick="updateKYC('{{ vendor.id }}', 'rejected')">
+                                        <i class="bi bi-x"></i> Reject
+                                    </button>
+                                    <a href="/admin/vendors/vendor/{{ vendor.id }}/change/" class="btn btn-info btn-sm" target="_blank">
+                                        <i class="bi bi-eye"></i> View
+                                    </a>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted text-center">No pending KYC verifications</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Chat Moderation Section -->
+            <div id="chatModeration" class="mb-5">
+                <h4>Chat Moderation</h4>
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card bg-danger text-white">
+                            <div class="card-body text-center">
+                                <h3>{{ moderation_stats.flagged_messages }}</h3>
+                                <small>Flagged Messages</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-warning text-white">
+                            <div class="card-body text-center">
+                                <h3>{{ moderation_stats.escrow_bypass_attempts }}</h3>
+                                <small>Escrow Bypass Attempts</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Recent Flagged Messages</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if flagged_messages_list %}
+                            {% for message in flagged_messages_list %}
+                            <div class="alert alert-danger">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <strong>{{ message.sender.username }}</strong> 
+                                        <small class="text-muted">in {{ message.room }}</small>
+                                    </div>
+                                    <small>{{ message.created_at|date:"M d, H:i" }}</small>
+                                </div>
+                                <div class="mt-2">
+                                    <strong>Message:</strong> {{ message.content }}<br>
+                                    <strong>Violation:</strong> 
+                                    <span class="badge bg-danger">{{ message.moderations.first.violation_type|title }}</span>
+                                </div>
+                                <div class="mt-2">
+                                    <button class="btn btn-sm btn-warning" onclick="reviewMessage('{{ message.id }}', 'warning')">
+                                        Send Warning
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="reviewMessage('{{ message.id }}', 'delete')">
+                                        Delete Message
+                                    </button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted text-center">No flagged messages</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <!-- Recent Users -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Recent Users</h5>
+                            <a href="/admin/core/user/" class="btn btn-sm btn-outline-primary" target="_blank">View All</a>
+                        </div>
+                        <div class="card-body">
+                            {% if recent_users %}
+                                {% for user_item in recent_users %}
+                                <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                                    <div>
+                                        <strong>{% if user_item.full_name %}{{ user_item.full_name }}{% else %}{{ user_item.username }}{% endif %}</strong>
+                                        <small class="text-muted d-block">{{ user_item.email }}</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="badge bg-secondary">{{ user_item.user_type|title }}</span>
+                                        {% if user_item.is_verified %}
+                                            <i class="bi bi-check-circle text-success"></i>
+                                        {% else %}
+                                            <i class="bi bi-clock text-warning"></i>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted text-center">No users yet</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Orders -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Recent Orders</h5>
+                            <a href="/admin/orders/order/" class="btn btn-sm btn-outline-primary" target="_blank">View All</a>
+                        </div>
+                        <div class="card-body">
+                            {% if recent_orders %}
+                                {% for order in recent_orders %}
+                                <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                                    <div>
+                                        <strong>#{{ order.order_number }}</strong>
+                                        <small class="text-muted d-block">{% if order.user.full_name %}{{ order.user.full_name }}{% else %}{{ order.user.username }}{% endif %}</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <div>₹{{ order.total_amount|floatformat:2 }}</div>
+                                        <span class="badge bg-info">{{ order.order_status|title }}</span>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted text-center">No orders yet</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateKYC(vendorId, status) {
+    if (!confirm(`Are you sure you want to ${status} this KYC?`)) return;
+    
+    fetch('/accounts/admin/update-kyc/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({
+            vendor_id: vendorId,
+            status: status
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to update KYC status');
+    });
+}
+
+function reviewMessage(messageId, action) {
+    if (!confirm(`Are you sure you want to ${action} this message?`)) return;
+    
+    fetch('/accounts/admin/moderate-message/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({
+            message_id: messageId,
+            action: action
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to moderate message');
+    });
+}
+</script>
+{% endblock %}

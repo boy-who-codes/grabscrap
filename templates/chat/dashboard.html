@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+
+{% block title %}Chat Dashboard - KABAADWALA™{% endblock %}
+
+{% block extra_css %}
+<style>
+.chat-container { height: 70vh; }
+.chat-messages { height: 500px; overflow-y: auto; }
+.message-bubble { max-width: 70%; margin-bottom: 10px; padding: 10px; border-radius: 10px; }
+.message-sent { margin-left: auto; background: #007bff; color: white; }
+.message-received { background: #f8f9fa; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid my-4">
+    <div class="row chat-container">
+        <!-- Chat Sidebar -->
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-chat-dots"></i> Chats ({{ rooms.count }})</h5>
+                </div>
+                <div class="card-body p-0 chat-messages">
+                    {% if rooms %}
+                        {% for room in rooms %}
+                        <div class="chat-room-item p-3 border-bottom {% if room.id == current_room.id %}bg-light{% endif %}" 
+                             onclick="selectRoom('{{ room.id }}')" style="cursor: pointer;">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    {% if room.room_type == 'product' %}
+                                        <i class="bi bi-box-seam text-success fs-4"></i>
+                                    {% elif room.room_type == 'order' %}
+                                        <i class="bi bi-receipt text-warning fs-4"></i>
+                                    {% else %}
+                                        <i class="bi bi-headset text-info fs-4"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-1">
+                                        {% if room.product %}
+                                            {{ room.product.title|truncatechars:30 }}
+                                        {% elif room.order %}
+                                            Order #{{ room.order.order_number }}
+                                        {% else %}
+                                            {{ room.name }}
+                                        {% endif %}
+                                    </h6>
+                                    <small class="text-muted">
+                                        {% if room.room_type == 'product' %}
+                                            with {{ room.product.vendor.store_name }}
+                                        {% elif room.room_type == 'order' %}
+                                            {{ room.order.vendor.store_name }}
+                                        {% endif %}
+                                    </small>
+                                    <div class="d-flex justify-content-between align-items-center mt-1">
+                                        <small class="text-muted">{{ room.last_activity|timesince }} ago</small>
+                                        {% if room.unread_count > 0 %}
+                                            <span class="badge bg-danger">{{ room.unread_count }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-chat-square-dots display-1 text-muted"></i>
+                            <h5 class="mt-3">No chats yet</h5>
+                            <p class="text-muted">Start a conversation by browsing products</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Chat Messages -->
+        <div class="col-md-8">
+            {% if current_room %}
+                <div class="card h-100">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">
+                            {% if current_room.product %}
+                                {{ current_room.product.title }}
+                            {% elif current_room.order %}
+                                Order #{{ current_room.order.order_number }}
+                            {% else %}
+                                {{ current_room.name }}
+                            {% endif %}
+                        </h6>
+                    </div>
+                    
+                    <div class="card-body chat-messages" id="chatMessages">
+                        {% for message in messages %}
+                            <div class="message-bubble {% if message.sender == user %}message-sent{% else %}message-received{% endif %}">
+                                {% if message.message_type == 'image' %}
+                                    {% for attachment in message.attachments %}
+                                        {% if attachment.type == 'image' %}
+                                            <img src="{{ attachment.url }}" class="img-fluid rounded mb-2" style="max-width: 200px;">
+                                        {% endif %}
+                                    {% endfor %}
+                                {% elif message.message_type == 'file' %}
+                                    {% for attachment in message.attachments %}
+                                        <a href="{{ attachment.url }}" target="_blank" class="btn btn-sm btn-outline-primary mb-2">
+                                            <i class="bi bi-download"></i> {{ attachment.name }}
+                                        </a>
+                                    {% endfor %}
+                                {% endif %}
+                                
+                                {% if message.content %}
+                                    <div>{{ message.content }}</div>
+                                {% endif %}
+                                
+                                <small class="text-muted d-block mt-1">
+                                    {{ message.sender.full_name|default:message.sender.username }} • {{ message.created_at|date:"M d, H:i" }}
+                                </small>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="card-footer">
+                        <form id="messageForm" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="messageInput" placeholder="Type your message...">
+                                <input type="file" id="fileInput" style="display: none;" accept="image/*,.pdf,.doc,.docx">
+                                <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('fileInput').click()">
+                                    <i class="bi bi-paperclip"></i>
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-send"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            {% else %}
+                <div class="card h-100">
+                    <div class="card-body d-flex align-items-center justify-content-center">
+                        <div class="text-center">
+                            <i class="bi bi-chat-square-text display-1 text-muted"></i>
+                            <h5 class="mt-3">Select a chat to start messaging</h5>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentRoomId = '{{ current_room.id|default:"" }}';
+
+function selectRoom(roomId) {
+    window.location.href = `/chat/${roomId}/`;
+}
+
+document.getElementById('fileInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        console.log('File selected:', file.name);
+    }
+});
+
+document.getElementById('messageForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const messageInput = document.getElementById('messageInput');
+    const fileInput = document.getElementById('fileInput');
+    const message = messageInput.value.trim();
+    const file = fileInput.files[0];
+    
+    if (!message && !file) {
+        alert('Please enter a message or select a file');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('content', message);
+    if (file) {
+        formData.append('file', file);
+    }
+    
+    fetch(`/chat/api/send-message/${currentRoomId}/`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert(data.error);
+        } else {
+            messageInput.value = '';
+            fileInput.value = '';
+            window.location.reload();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to send message');
+    });
+});
+</script>
+{% endblock %}

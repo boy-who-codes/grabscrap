@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}Recharge Wallet - KABAADWALA™{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="bi bi-wallet2"></i> Recharge Wallet</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Current Balance</h5>
+                            <h2 class="text-success">₹{{ wallet.current_balance|floatformat:2 }}</h2>
+                            
+                            <form method="post" class="mt-4">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label class="form-label">Recharge Amount</label>
+                                    <input type="number" class="form-control" name="amount" 
+                                           min="100" max="50000" step="1" required 
+                                           placeholder="Enter amount (₹100 - ₹50,000)">
+                                    <div class="form-text">Minimum: ₹100, Maximum: ₹50,000</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="row">
+                                        <div class="col-4">
+                                            <button type="button" class="btn btn-outline-primary w-100" 
+                                                    onclick="setAmount(500)">₹500</button>
+                                        </div>
+                                        <div class="col-4">
+                                            <button type="button" class="btn btn-outline-primary w-100" 
+                                                    onclick="setAmount(1000)">₹1,000</button>
+                                        </div>
+                                        <div class="col-4">
+                                            <button type="button" class="btn btn-outline-primary w-100" 
+                                                    onclick="setAmount(2000)">₹2,000</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-success btn-lg w-100">
+                                    <i class="bi bi-credit-card"></i> Proceed to Payment
+                                </button>
+                            </form>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h5>Recent Recharges</h5>
+                            {% if recent_recharges %}
+                                {% for recharge in recent_recharges %}
+                                    <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                                        <div>
+                                            <strong>₹{{ recharge.amount|floatformat:2 }}</strong><br>
+                                            <small class="text-muted">{{ recharge.created_at|date:"M d, Y H:i" }}</small>
+                                        </div>
+                                        <span class="badge bg-success">Completed</span>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted">No recent recharges</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function setAmount(amount) {
+    document.querySelector('input[name="amount"]').value = amount;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout - KABAADWALA™{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="bi bi-credit-card"></i> Checkout</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="checkoutForm">
+                        {% csrf_token %}
+                        
+                        <!-- Delivery Address -->
+                        <div class="mb-4">
+                            <h5>Delivery Address</h5>
+                            {% if user_addresses %}
+                                {% for address in user_addresses %}
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="address_id" 
+                                               value="{{ address.id }}" id="address{{ address.id }}" 
+                                               {% if forloop.first %}checked{% endif %}>
+                                        <label class="form-check-label" for="address{{ address.id }}">
+                                            <strong>{{ address.address_type|title }}</strong><br>
+                                            {{ address.street_address }}, {{ address.city }}<br>
+                                            {{ address.state }} - {{ address.postal_code }}
+                                        </label>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="alert alert-warning">
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                    Please add a delivery address first.
+                                    <a href="{% url 'accounts:profile' %}" class="btn btn-sm btn-warning ms-2">
+                                        Add Address
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Order Notes -->
+                        <div class="mb-4">
+                            <label class="form-label">Order Notes (Optional)</label>
+                            <textarea class="form-control" name="notes" rows="3" 
+                                      placeholder="Any special instructions for delivery..."></textarea>
+                        </div>
+                        
+                        <!-- Coupon Code -->
+                        <div class="mb-4">
+                            <label class="form-label">Coupon Code (Optional)</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="coupon_code" 
+                                       placeholder="Enter coupon code">
+                                <button type="button" class="btn btn-outline-success" onclick="validateCoupon()">
+                                    Apply
+                                </button>
+                            </div>
+                            <div id="couponMessage" class="mt-2"></div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success btn-lg w-100" 
+                                {% if not user_addresses %}disabled{% endif %}>
+                            <i class="bi bi-check-circle"></i> Place Order
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    {% for item in cart_items %}
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <strong>{{ item.product.title|truncatechars:30 }}</strong><br>
+                                <small class="text-muted">Qty: {{ item.quantity }}</small>
+                            </div>
+                            <span>₹{{ item.total_price|floatformat:2 }}</span>
+                        </div>
+                    {% endfor %}
+                    
+                    <hr>
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal</span>
+                        <span id="subtotal">₹{{ cart.total_amount|floatformat:2 }}</span>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Delivery</span>
+                        <span class="text-success">FREE</span>
+                    </div>
+                    
+                    <div id="couponDiscount" class="d-flex justify-content-between mb-2 text-success" style="display: none !important;">
+                        <span>Coupon Discount</span>
+                        <span id="discountAmount">-₹0.00</span>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="d-flex justify-content-between mb-3">
+                        <strong>Total</strong>
+                        <strong id="finalTotal">₹{{ cart.total_amount|floatformat:2 }}</strong>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="bi bi-wallet2"></i>
+                        Wallet Balance: ₹{{ user_wallet.current_balance|floatformat:2 }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let originalTotal = {{ cart.total_amount }};
+let appliedDiscount = 0;
+
+function validateCoupon() {
+    const couponCode = document.querySelector('input[name="coupon_code"]').value.trim();
+    const messageDiv = document.getElementById('couponMessage');
+    
+    if (!couponCode) {
+        showMessage('Please enter a coupon code', 'danger');
+        return;
+    }
+    
+    fetch('/coupons/validate/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({
+            code: couponCode,
+            order_amount: originalTotal
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.valid) {
+            appliedDiscount = data.discount;
+            showDiscount(data.discount);
+            showMessage(data.message, 'success');
+        } else {
+            showMessage(data.message, 'danger');
+        }
+    })
+    .catch(error => {
+        showMessage('Error validating coupon', 'danger');
+    });
+}
+
+function showMessage(message, type) {
+    const messageDiv = document.getElementById('couponMessage');
+    messageDiv.innerHTML = `<div class="alert alert-${type} alert-sm py-2">${message}</div>`;
+}
+
+function showDiscount(discount) {
+    const discountDiv = document.getElementById('couponDiscount');
+    const discountAmount = document.getElementById('discountAmount');
+    const finalTotal = document.getElementById('finalTotal');
+    
+    discountAmount.textContent = `-₹${discount.toFixed(2)}`;
+    discountDiv.style.display = 'flex';
+    
+    const newTotal = originalTotal - discount;
+    finalTotal.textContent = `₹${newTotal.toFixed(2)}`;
+}
+</script>
+{% endblock %}

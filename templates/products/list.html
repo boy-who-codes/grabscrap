@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load ad_tags %}
+
+{% block title %}Products - KABAADWALA™{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Filters Sidebar -->
+    <div class="col-lg-3 mb-4">
+        <div class="card sticky-top" style="top: 100px;">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-funnel"></i> Filters</h5>
+            </div>
+            <div class="card-body">
+                <form method="get" id="filterForm">
+                    <!-- Search -->
+                    <div class="mb-3">
+                        <label class="form-label">Search Products</label>
+                        <input type="text" class="form-control" name="search" value="{{ search_query|default:'' }}" placeholder="Search products...">
+                    </div>
+                    
+                    <!-- Category Filter -->
+                    <div class="mb-3">
+                        <label class="form-label">Category</label>
+                        <select class="form-select" name="category">
+                            <option value="">All Categories</option>
+                            {% for category in categories %}
+                                <option value="{{ category.id }}" {% if selected_category == category.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ category.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Sort -->
+                    <div class="mb-3">
+                        <label class="form-label">Sort By</label>
+                        <select class="form-select" name="sort">
+                            <option value="created_at" {% if sort_by == 'created_at' %}selected{% endif %}>Latest</option>
+                            <option value="price_low" {% if sort_by == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+                            <option value="price_high" {% if sort_by == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+                            <option value="popular" {% if sort_by == 'popular' %}selected{% endif %}>Most Popular</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success w-100">
+                        <i class="bi bi-search"></i> Apply Filters
+                    </button>
+                    <a href="{% url 'products:list' %}" class="btn btn-outline-secondary w-100 mt-2">
+                        <i class="bi bi-arrow-clockwise"></i> Clear Filters
+                    </a>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Sidebar Advertisements -->
+        {% show_sidebar_ads %}
+    </div>
+    
+    <!-- Products Grid -->
+    <div class="col-lg-9">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3><i class="bi bi-box-seam"></i> Products</h3>
+                <p class="text-muted mb-0">{{ products.paginator.count }} products found</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-secondary" onclick="toggleView('grid')" id="gridBtn">
+                    <i class="bi bi-grid-3x3-gap"></i>
+                </button>
+                <button class="btn btn-outline-secondary" onclick="toggleView('list')" id="listBtn">
+                    <i class="bi bi-list"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Products Container -->
+        <div id="productsContainer">
+            {% if products %}
+                <div class="row" id="productsGrid">
+                    {% for product in products %}
+                    <div class="col-md-6 col-lg-4 mb-4 product-item">
+                        <div class="card h-100 shadow-sm">
+                            <!-- Product Image -->
+                            <div class="position-relative">
+                                {% if product.images.first %}
+                                    <img src="{{ product.images.first.image.url }}" class="card-img-top" alt="{{ product.title }}" style="height: 200px; object-fit: cover;" loading="lazy">
+                                {% else %}
+                                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                        <i class="bi bi-image display-4 text-muted"></i>
+                                    </div>
+                                {% endif %}
+                                
+                                <!-- Wishlist Button -->
+                                {% if user.is_authenticated %}
+                                <button class="btn btn-outline-danger btn-sm position-absolute top-0 end-0 m-2" onclick="toggleWishlist('{{ product.id }}')">
+                                    <i class="bi bi-heart"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Product Info -->
+                            <div class="card-body d-flex flex-column">
+                                <h6 class="card-title">{{ product.title }}</h6>
+                                <p class="card-text text-muted small flex-grow-1">{{ product.description|truncatewords:15 }}</p>
+                                
+                                <!-- Product Details -->
+                                <div class="mt-auto">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h5 class="text-success mb-0">₹{{ product.price|floatformat:2 }}</h5>
+                                        <small class="text-muted">{{ product.vendor.store_name }}</small>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <small class="text-muted">
+                                            <i class="bi bi-tag"></i> {{ product.category.name }}
+                                        </small>
+                                        {% if product.average_rating %}
+                                            <span class="badge bg-warning text-dark">
+                                                {{ product.average_rating|floatformat:1 }} <i class="bi bi-star-fill"></i>
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="d-flex gap-2">
+                                        <a href="{% url 'products:detail' product.id %}" class="btn btn-outline-primary btn-sm flex-grow-1">
+                                            <i class="bi bi-eye"></i> View
+                                        </a>
+                                        {% if user.is_authenticated %}
+                                        <form method="post" action="{% url 'products:add_to_cart' product.id %}" class="flex-grow-1">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="quantity" value="1">
+                                            <button type="submit" class="btn btn-success btn-sm w-100">
+                                                <i class="bi bi-cart-plus"></i> Add to Cart
+                                            </button>
+                                        </form>
+                                        {% else %}
+                                        <a href="{% url 'accounts:login' %}" class="btn btn-success btn-sm flex-grow-1">
+                                            <i class="bi bi-cart-plus"></i> Add to Cart
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-box-seam display-1 text-muted"></i>
+                    <h4 class="mt-3">No products found</h4>
+                    <p class="text-muted">Try adjusting your filters or search terms</p>
+                    <a href="{% url 'products:list' %}" class="btn btn-success">
+                        <i class="bi bi-arrow-clockwise"></i> View All Products
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if products.has_other_pages %}
+        <nav aria-label="Products pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if products.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ products.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">
+                            <i class="bi bi-chevron-left"></i> Previous
+                        </a>
+                    </li>
+                {% endif %}
+                
+                {% for num in products.paginator.page_range %}
+                    {% if products.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > products.number|add:'-3' and num < products.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if products.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ products.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">
+                            Next <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-submit form on filter change
+document.querySelectorAll('#filterForm select').forEach(select => {
+    select.addEventListener('change', () => {
+        document.getElementById('filterForm').submit();
+    });
+});
+
+// View toggle functionality
+function toggleView(view) {
+    const gridBtn = document.getElementById('gridBtn');
+    const listBtn = document.getElementById('listBtn');
+    const container = document.getElementById('productsGrid');
+    
+    if (view === 'grid') {
+        gridBtn.classList.add('btn-success');
+        gridBtn.classList.remove('btn-outline-secondary');
+        listBtn.classList.add('btn-outline-secondary');
+        listBtn.classList.remove('btn-success');
+        container.className = 'row';
+        document.querySelectorAll('.product-item').forEach(item => {
+            item.className = 'col-md-6 col-lg-4 mb-4 product-item';
+        });
+    } else {
+        listBtn.classList.add('btn-success');
+        listBtn.classList.remove('btn-outline-secondary');
+        gridBtn.classList.add('btn-outline-secondary');
+        gridBtn.classList.remove('btn-success');
+        container.className = 'row';
+        document.querySelectorAll('.product-item').forEach(item => {
+            item.className = 'col-12 mb-3 product-item';
+        });
+    }
+}
+
+// Wishlist toggle
+function toggleWishlist(productId) {
+    // Implementation for wishlist toggle
+    console.log('Toggle wishlist for product:', productId);
+}
+
+// Initialize grid view
+document.addEventListener('DOMContentLoaded', () => {
+    toggleView('grid');
+});
+</script>
+{% endblock %}

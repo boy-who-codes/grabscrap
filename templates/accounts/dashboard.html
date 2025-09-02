@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - KABAADWALA™{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Sidebar -->
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                {% if user.profile_photo %}
+                    <img src="{{ user.profile_photo.url }}" alt="Profile" class="rounded-circle mb-3" width="80" height="80">
+                {% else %}
+                    <i class="bi bi-person-circle display-3 text-muted mb-3"></i>
+                {% endif %}
+                <h5>{{ user.full_name|default:user.username }}</h5>
+                <p class="text-muted">{{ user.email }}</p>
+                {% if not user.is_verified %}
+                    <span class="badge bg-warning">Email Not Verified</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Wallet Card -->
+        <div class="card mt-3">
+            <div class="card-header bg-success text-white">
+                <h6 class="mb-0"><i class="bi bi-wallet2"></i> Wallet Balance</h6>
+            </div>
+            <div class="card-body text-center">
+                <h3 class="text-success">₹{{ wallet.current_balance|floatformat:2 }}</h3>
+                {% if wallet.held_amount > 0 %}
+                    <p class="text-muted small">₹{{ wallet.held_amount|floatformat:2 }} held</p>
+                {% endif %}
+                <a href="{% url 'wallet:detail' %}" class="btn btn-outline-success btn-sm">
+                    <i class="bi bi-plus-circle"></i> Manage Wallet
+                </a>
+            </div>
+        </div>
+        
+        <!-- Quick Navigation -->
+        <div class="list-group mt-3">
+            <a href="{% url 'accounts:dashboard' %}" class="list-group-item list-group-item-action active">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
+            <a href="{% url 'orders:list' %}" class="list-group-item list-group-item-action">
+                <i class="bi bi-box-seam"></i> My Orders
+                {% if stats.pending_orders > 0 %}
+                    <span class="badge bg-primary rounded-pill">{{ stats.pending_orders }}</span>
+                {% endif %}
+            </a>
+            <a href="{% url 'accounts:addresses' %}" class="list-group-item list-group-item-action">
+                <i class="bi bi-geo-alt"></i> Addresses
+                <span class="badge bg-secondary rounded-pill">{{ addresses_count }}</span>
+            </a>
+            <a href="{% url 'accounts:profile' %}" class="list-group-item list-group-item-action">
+                <i class="bi bi-person"></i> Profile Settings
+            </a>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="col-md-9">
+        <!-- Welcome Message -->
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="bi bi-house-heart"></i> Welcome back, <strong>{{ user.full_name|default:user.username }}</strong>!
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        
+        <!-- Stats Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4>{{ stats.total_orders }}</h4>
+                                <small>Total Orders</small>
+                            </div>
+                            <i class="bi bi-box-seam display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4>₹{{ stats.total_spent|floatformat:0 }}</h4>
+                                <small>Total Spent</small>
+                            </div>
+                            <i class="bi bi-currency-rupee display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4>{{ stats.pending_orders }}</h4>
+                                <small>Pending Orders</small>
+                            </div>
+                            <i class="bi bi-clock display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4>{{ stats.completed_orders }}</h4>
+                                <small>Completed</small>
+                            </div>
+                            <i class="bi bi-check-circle display-6"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <!-- Recent Orders -->
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-box-seam"></i> Recent Orders</h5>
+                        <a href="{% url 'orders:list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                    </div>
+                    <div class="card-body">
+                        {% if recent_orders %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Order #</th>
+                                            <th>Vendor</th>
+                                            <th>Amount</th>
+                                            <th>Status</th>
+                                            <th>Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for order in recent_orders %}
+                                        <tr>
+                                            <td>
+                                                <a href="{% url 'orders:detail' order.id %}" class="text-decoration-none">
+                                                    <strong>#{{ order.order_number }}</strong>
+                                                </a>
+                                            </td>
+                                            <td>{{ order.vendor.store_name }}</td>
+                                            <td>₹{{ order.total_amount|floatformat:2 }}</td>
+                                            <td>
+                                                <span class="badge bg-{% if order.order_status == 'completed' %}success{% elif order.order_status == 'cancelled' %}danger{% elif order.order_status in 'placed,confirmed' %}warning{% else %}info{% endif %}">
+                                                    {{ order.get_order_status_display }}
+                                                </span>
+                                            </td>
+                                            <td>{{ order.created_at|date:"M d, Y" }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="bi bi-box-seam display-1 text-muted"></i>
+                                <h5 class="mt-3">No orders yet</h5>
+                                <p class="text-muted">Start shopping to see your orders here</p>
+                                <a href="{% url 'products:list' %}" class="btn btn-success">Browse Products</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Transactions -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0"><i class="bi bi-list-ul"></i> Recent Transactions</h6>
+                        <a href="{% url 'wallet:detail' %}" class="btn btn-sm btn-outline-success">View All</a>
+                    </div>
+                    <div class="card-body">
+                        {% if recent_transactions %}
+                            {% for transaction in recent_transactions %}
+                            <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                                <div>
+                                    <small class="text-muted">{{ transaction.get_transaction_type_display }}</small>
+                                    <div class="fw-bold">
+                                        {% if transaction.transaction_type == 'recharge' %}+{% elif transaction.transaction_type == 'deduct' %}-{% endif %}₹{{ transaction.amount|floatformat:2 }}
+                                    </div>
+                                    <small class="text-muted">{{ transaction.created_at|date:"M d, H:i" }}</small>
+                                </div>
+                                <span class="badge bg-{% if transaction.status == 'completed' %}success{% elif transaction.status == 'failed' %}danger{% else %}warning{% endif %}">
+                                    {{ transaction.get_status_display }}
+                                </span>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-3">
+                                <i class="bi bi-wallet2 display-4 text-muted"></i>
+                                <p class="text-muted small mt-2">No transactions yet</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
