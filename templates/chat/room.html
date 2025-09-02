@@ -14,6 +14,8 @@
         overflow-y: auto;
         padding: 0;
         background: #f8f9fa;
+        max-height: 500px;
+        scroll-behavior: smooth;
     }
     .message-bubble {
         max-width: 70%;
@@ -21,6 +23,7 @@
         padding: 12px 16px;
         border-radius: 18px;
         word-wrap: break-word;
+        position: relative;
     }
     .message-sent {
         background: #007bff;
@@ -38,6 +41,28 @@
         font-size: 0.75rem;
         opacity: 0.7;
         margin-top: 4px;
+    }
+    .message-status {
+        font-size: 0.7rem;
+        opacity: 0.6;
+        margin-top: 2px;
+    }
+    .read-status {
+        color: #28a745;
+    }
+    .typing-indicator {
+        padding: 10px 16px;
+        font-style: italic;
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    .typing-dots {
+        display: inline-block;
+        animation: typing 1.4s infinite;
+    }
+    @keyframes typing {
+        0%, 60%, 100% { opacity: 0; }
+        30% { opacity: 1; }
     }
     .chat-input-container {
         padding: 16px;
@@ -130,6 +155,15 @@
                 </div>
                 <div class="message-time text-end">
                     {{ message.created_at|date:"H:i" }}
+                    {% if message.sender == request.user %}
+                        <div class="message-status">
+                            {% if message.is_read %}
+                                <i class="bi bi-check2-all read-status"></i> Read
+                            {% else %}
+                                <i class="bi bi-check2"></i> Sent
+                            {% endif %}
+                        </div>
+                    {% endif %}
                 </div>
             </div>
             {% empty %}
@@ -138,6 +172,11 @@
                 <p class="mt-3">No messages yet. Start the conversation!</p>
             </div>
             {% endfor %}
+            
+            <!-- Typing indicator -->
+            <div id="typing-indicator" class="typing-indicator" style="display: none;">
+                <span id="typing-user"></span> is typing<span class="typing-dots">...</span>
+            </div>
         </div>
         
         <!-- Image Preview -->

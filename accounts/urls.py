@@ -10,6 +10,10 @@ urlpatterns = [
     path('logout/', views.CustomLogoutView.as_view(), name='logout'),
     path('signup/', views.SignupView.as_view(), name='signup'),
     path('verify-email/<uidb64>/<token>/', views.verify_email, name='verify_email'),
+    path('send-otp/', views.send_otp, name='send_otp'),
+    path('verify-otp/', views.verify_otp_view, name='verify_otp'),
+    path('resend-otp/', views.resend_otp, name='resend_otp'),
+    path('resend-2fa-otp/', views.resend_2fa_otp, name='resend_2fa_otp'),
     
     # Password Reset
     path('password-reset/', PasswordResetView.as_view(

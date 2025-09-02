@@ -6,9 +6,10 @@ from django.views.generic import CreateView
 from django.urls import reverse_lazy
 from django.views.decorators.http import require_http_methods, require_POST
 from django.contrib.auth import authenticate, login
-from django.http import JsonResponse
+from django.utils.timezone import now
 from django.conf import settings
 from django.db.models import Sum, Count
+from django.apps import apps
 
 from core.models import User, Address
 from wallet.models import Wallet, WalletTransaction
@@ -33,29 +34,32 @@ def login_view(request):
                     return redirect('accounts:login')
                 
                 # Generate and send OTP
-                from core.models import TwoFactorAuth
+                TwoFactorAuth = apps.get_model('core', 'TwoFactorAuth')
                 from core.utils import generate_otp, send_otp_email, get_client_ip
-                from django.utils import timezone
                 from datetime import timedelta
                 
                 otp_code = generate_otp()
-                expires_at = timezone.now() + timedelta(minutes=10)
+                expires_at = now() + timedelta(minutes=10)
+                
+                print(f"\n📧 OTP CREATION DEBUG:")
+                print(f"User: {user.email}")
+                print(f"Generated OTP: {otp_code}")
+                print(f"Expires at: {expires_at}")
+                print(f"Current time: {now()}")
                 
                 TwoFactorAuth.objects.create(
                     user=user,
                     otp_code=otp_code,
                     purpose='login',
-                    expires_at=expires_at,
-                    ip_address=get_client_ip(request),
-                    user_agent=request.META.get('HTTP_USER_AGENT', '')
+                    expires_at=expires_at
                 )
                 
                 # Send OTP email
                 from core.utils import send_otp_email
                 send_otp_email(user, otp_code, 'login', request)
                 
-                # Store user ID in session for step 2
-                request.session['pending_user_id'] = user.id
+                # Store user ID in session for step 2 (convert UUID to string)
+                request.session['pending_user_id'] = str(user.id)
                 request.session['login_step'] = '2'
                 
                 messages.success(request, 'Verification code sent to your email!')
@@ -76,8 +80,9 @@ def login_view(request):
                 return redirect('accounts:login')
             
             try:
-                from core.models import TwoFactorAuth, LoginHistory
-                from core.utils import get_client_ip, get_device_info, get_location_info, send_login_alert
+                TwoFactorAuth = apps.get_model('core', 'TwoFactorAuth')
+                LoginHistory = apps.get_model('core', 'LoginHistory')
+                from core.utils import get_client_ip, send_login_alert
                 
                 user = User.objects.get(id=user_id)
                 otp_obj = TwoFactorAuth.objects.filter(
@@ -87,28 +92,42 @@ def login_view(request):
                     is_used=False
                 ).first()
                 
-                if otp_obj and otp_obj.is_valid():
+                # Debug OTP validation
+                print(f"\n🔍 OTP DEBUG:")
+                print(f"User: {user.email}")
+                print(f"Entered OTP: {otp_code}")
+                print(f"OTP Object Found: {otp_obj is not None}")
+                
+                if otp_obj:
+                    print(f"Stored OTP: {otp_obj.otp_code}")
+                    print(f"Expires at: {otp_obj.expires_at}")
+                    print(f"Current time: {now()}")
+                    print(f"Is expired: {otp_obj.expires_at <= now()}")
+                    print(f"Is used: {otp_obj.is_used}")
+                else:
+                    # Check if any OTP exists for this user
+                    all_otps = TwoFactorAuth.objects.filter(user=user, purpose='login')
+                    print(f"Total OTPs for user: {all_otps.count()}")
+                    for otp in all_otps:
+                        print(f"  OTP: {otp.otp_code}, Used: {otp.is_used}, Expires: {otp.expires_at}")
+                
+                if otp_obj and otp_obj.expires_at > now():
                     # Mark OTP as used
                     otp_obj.is_used = True
                     otp_obj.save()
                     
                     # Get login details
                     ip_address = get_client_ip(request)
-                    device_info = get_device_info(request)
-                    location_info = get_location_info(ip_address)
                     
                     # Create login history
                     login_history = LoginHistory.objects.create(
                         user=user,
                         ip_address=ip_address,
                         user_agent=request.META.get('HTTP_USER_AGENT', ''),
-                        device_info=device_info,
-                        location_info=location_info,
-                        login_successful=True
+                        is_successful=True
                     )
                     
                     # Send login alert email
-                    from core.utils import send_login_alert
                     send_login_alert(user, login_history, request)
                     
                     # Login user
@@ -128,7 +147,17 @@ def login_view(request):
                     else:
                         return redirect('accounts:dashboard')
                 else:
-                    messages.error(request, 'Invalid or expired verification code')
+                    # Debug info for user
+                    debug_msg = 'Invalid or expired verification code'
+                    if settings.DEBUG:
+                        if not otp_obj:
+                            debug_msg += f' [DEBUG: No OTP found for code {otp_code}]'
+                        elif otp_obj.expires_at <= now():
+                            debug_msg += f' [DEBUG: OTP expired at {otp_obj.expires_at}, current time {now()}]'
+                        elif otp_obj.is_used:
+                            debug_msg += f' [DEBUG: OTP already used]'
+                    
+                    messages.error(request, debug_msg)
                     
             except User.DoesNotExist:
                 messages.error(request, 'Invalid session. Please login again.')
@@ -254,6 +283,20 @@ def admin_dashboard(request):
     
     # Admin statistics
     total_users = User.objects.count()
+    total_vendors = Vendor.objects.count()
+    pending_kyc = Vendor.objects.filter(kyc_status='pending').count()
+    approved_vendors = Vendor.objects.filter(kyc_status='approved').count()
+    rejected_kyc = Vendor.objects.filter(kyc_status='rejected').count()
+    
+    # Recent KYC submissions
+    recent_kyc_submissions = Vendor.objects.filter(
+        kyc_status='pending'
+    ).select_related('user').order_by('-created_at')[:10]
+    
+    # Recently approved/rejected
+    recent_kyc_actions = Vendor.objects.exclude(
+        kyc_status='pending'
+    ).select_related('user').order_by('-updated_at')[:10]
     total_customers = User.objects.filter(user_type='customer').count()
     total_vendors = User.objects.filter(user_type='vendor').count()
     verified_users = User.objects.filter(is_verified=True).count()
@@ -323,28 +366,31 @@ def admin_dashboard(request):
 def admin_update_kyc(request):
     """Update KYC status"""
     if not request.user.is_admin_user:
-        return JsonResponse({'error': 'Access denied'}, status=403)
+        messages.error(request, 'Access denied')
+        return redirect('accounts:dashboard')
     
-    import json
-    data = json.loads(request.body)
-    vendor_id = data.get('vendor_id')
-    status = data.get('status')
-    
-    if status not in ['approved', 'rejected']:
-        return JsonResponse({'error': 'Invalid status'}, status=400)
-    
-    try:
-        from vendors.models import Vendor
-        vendor = Vendor.objects.get(id=vendor_id)
-        vendor.kyc_status = status
-        vendor.save()
+    if request.method == 'POST':
+        vendor_id = request.POST.get('vendor_id')
+        status = request.POST.get('status')
         
-        return JsonResponse({'success': True})
+        if status not in ['approved', 'rejected']:
+            messages.error(request, 'Invalid status')
+            return redirect('accounts:dashboard')
         
-    except Vendor.DoesNotExist:
-        return JsonResponse({'error': 'Vendor not found'}, status=404)
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        try:
+            from vendors.models import Vendor
+            vendor = Vendor.objects.get(id=vendor_id)
+            vendor.kyc_status = status
+            vendor.save()
+            
+            messages.success(request, f'KYC status updated to {status}')
+            
+        except Vendor.DoesNotExist:
+            messages.error(request, 'Vendor not found')
+        except Exception as e:
+            messages.error(request, f'Error: {str(e)}')
+    
+    return redirect('accounts:dashboard')
 
 
 @login_required
@@ -352,12 +398,11 @@ def admin_update_kyc(request):
 def admin_moderate_message(request):
     """Moderate chat message"""
     if not request.user.is_admin_user:
-        return JsonResponse({'error': 'Access denied'}, status=403)
+        messages.error(request, 'Access denied')
+        return redirect('accounts:dashboard')
     
-    import json
-    data = json.loads(request.body)
-    message_id = data.get('message_id')
-    action = data.get('action')
+    message_id = request.POST.get('message_id')
+    action = request.POST.get('action')
     
     try:
         from chat.models import ChatMessage, ChatModeration
@@ -367,6 +412,7 @@ def admin_moderate_message(request):
             message.content = '[Message deleted by admin]'
             message.is_flagged = False
             message.save()
+            messages.success(request, 'Message deleted successfully')
         elif action == 'warning':
             ChatModeration.objects.filter(message=message).update(
                 is_reviewed=True,
@@ -374,13 +420,14 @@ def admin_moderate_message(request):
             )
             message.is_flagged = False
             message.save()
-        
-        return JsonResponse({'success': True})
+            messages.success(request, 'Warning sent successfully')
         
     except ChatMessage.DoesNotExist:
-        return JsonResponse({'error': 'Message not found'}, status=404)
+        messages.error(request, 'Message not found')
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        messages.error(request, f'Error: {str(e)}')
+    
+    return redirect('accounts:dashboard')
 
 
 @login_required
@@ -510,10 +557,7 @@ def verify_email(request, uidb64, token):
         return redirect('accounts:login')
 
 
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
-import json
+
 
 
 from django.contrib.auth.tokens import default_token_generator
@@ -541,42 +585,37 @@ def verify_email(request, uidb64, token):
         return redirect('accounts:register')
 
 
-@csrf_exempt
-@require_http_methods(["GET"])
 def get_dev_email(request, user_id):
     """Get development email for modal display"""
     if not settings.DEBUG:
-        return JsonResponse({'error': 'Not available in production'}, status=404)
+        messages.error(request, 'Not available in production')
+        return redirect('accounts:dashboard')
     
     from django.core.cache import cache
     email_data = cache.get(f'dev_email_{user_id}')
     
     if email_data:
-        return JsonResponse({
-            'success': True,
-            'email': email_data
-        })
+        messages.info(request, f'Email found: {email_data}')
     else:
-        return JsonResponse({
-            'success': False,
-            'message': 'No email found'
-        })
+        messages.warning(request, 'No email found')
+    
+    return redirect('accounts:dashboard')
 
 
-@csrf_exempt
-@require_http_methods(["POST"])
+@require_POST
 def send_otp(request):
     """Send OTP to mobile number"""
     try:
-        data = json.loads(request.body)
-        mobile_number = data.get('mobile_number', '').strip()
+        mobile_number = request.POST.get('mobile_number', '').strip()
         
         if not mobile_number:
-            return JsonResponse({'success': False, 'message': 'Mobile number is required'})
+            messages.error(request, 'Mobile number is required')
+            return redirect('accounts:login')
         
         # Basic mobile number validation
         if not mobile_number.isdigit() or len(mobile_number) != 10:
-            return JsonResponse({'success': False, 'message': 'Please enter a valid 10-digit mobile number'})
+            messages.error(request, 'Please enter a valid 10-digit mobile number')
+            return redirect('accounts:login')
         
         # Generate OTP directly for immediate response
         import random
@@ -596,23 +635,152 @@ def send_otp(request):
         from core.tasks import send_mobile_otp
         send_mobile_otp.delay(mobile_number)
         
-        # For development, include OTP in response
+        # Show success message
         from django.conf import settings
-        response_data = {
-            'success': True, 
-            'message': f'OTP sent to {mobile_number}. Please check your messages.'
-        }
+        message = f'OTP sent to {mobile_number}. Please check your messages.'
         
-        # In development, show OTP in response
+        # In development, show OTP in message
         if settings.DEBUG:
-            response_data['dev_otp'] = otp
-            response_data['message'] += f' [DEV: OTP is {otp}]'
+            message += f' [DEV: OTP is {otp}]'
         
-        return JsonResponse(response_data)
+        messages.success(request, message)
+        
+        # Store mobile number in session for OTP verification
+        request.session['otp_mobile'] = mobile_number
+        return redirect('accounts:verify_otp')
         
     except Exception as e:
         print(f"❌ OTP Error: {str(e)}")
-        return JsonResponse({'success': False, 'message': 'Failed to send OTP. Please try again.'})
+        messages.error(request, 'Failed to send OTP. Please try again.')
+        return redirect('accounts:login')
+
+
+def verify_otp_view(request):
+    """Verify OTP for mobile login"""
+    mobile_number = request.session.get('otp_mobile')
+    
+    if not mobile_number:
+        messages.error(request, 'Session expired. Please request OTP again.')
+        return redirect('accounts:login')
+    
+    if request.method == 'POST':
+        entered_otp = request.POST.get('otp', '').strip()
+        
+        if not entered_otp:
+            messages.error(request, 'Please enter the OTP')
+            return render(request, 'accounts/verify_otp.html', {'mobile_number': mobile_number})
+        
+        # Get OTP from cache
+        from django.core.cache import cache
+        stored_otp = cache.get(f'mobile_otp_{mobile_number}')
+        
+        if not stored_otp:
+            messages.error(request, 'OTP expired. Please request a new one.')
+            return redirect('accounts:login')
+        
+        if entered_otp == stored_otp:
+            # OTP verified successfully
+            cache.delete(f'mobile_otp_{mobile_number}')
+            request.session.pop('otp_mobile', None)
+            
+            # Here you can implement user login logic
+            messages.success(request, 'OTP verified successfully!')
+            return redirect('accounts:dashboard')
+        else:
+            messages.error(request, 'Invalid OTP. Please try again.')
+    
+    return render(request, 'accounts/verify_otp.html', {'mobile_number': mobile_number})
+
+
+@require_POST
+def resend_otp(request):
+    """Resend OTP to mobile number"""
+    mobile_number = request.session.get('otp_mobile')
+    
+    if not mobile_number:
+        messages.error(request, 'Session expired. Please request OTP again.')
+        return redirect('accounts:login')
+    
+    try:
+        # Generate new OTP
+        import random
+        from django.core.cache import cache
+        
+        otp = str(random.randint(100000, 999999))
+        cache.set(f'mobile_otp_{mobile_number}', otp, timeout=300)
+        
+        # Console output for development
+        print(f"\n" + "="*60)
+        print(f"📱 OTP RESENT TO: {mobile_number}")
+        print(f"🔐 NEW OTP CODE: {otp}")
+        print(f"⏰ EXPIRES IN: 5 minutes")
+        print("="*60 + "\n")
+        
+        # Send OTP asynchronously
+        from core.tasks import send_mobile_otp
+        send_mobile_otp.delay(mobile_number)
+        
+        # Show success message
+        from django.conf import settings
+        message = f'New OTP sent to {mobile_number}.'
+        
+        if settings.DEBUG:
+            message += f' [DEV: OTP is {otp}]'
+        
+        messages.success(request, message)
+        
+    except Exception as e:
+        print(f"❌ Resend OTP Error: {str(e)}")
+        messages.error(request, 'Failed to resend OTP. Please try again.')
+    
+    return redirect('accounts:verify_otp')
+
+
+@require_POST
+def resend_2fa_otp(request):
+    """Resend OTP for 2FA login"""
+    user_id = request.session.get('pending_user_id')
+    
+    if not user_id:
+        messages.error(request, 'Session expired. Please login again.')
+        return redirect('accounts:login')
+    
+    try:
+        user = User.objects.get(id=user_id)
+        
+        # Generate new OTP
+        import random
+        otp_code = str(random.randint(100000, 999999))
+        
+        # Create new 2FA record
+        TwoFactorAuth = apps.get_model('core', 'TwoFactorAuth')
+        from datetime import timedelta
+        
+        # Delete old OTPs
+        TwoFactorAuth.objects.filter(user=user, purpose='login', is_used=False).delete()
+        
+        # Create new OTP
+        TwoFactorAuth.objects.create(
+            user=user,
+            otp_code=otp_code,
+            purpose='login',
+            expires_at=now() + timedelta(minutes=10)
+        )
+        
+        # Send OTP email
+        from core.utils import send_otp_email
+        send_otp_email(user, otp_code, 'login', request)
+        
+        messages.success(request, 'New verification code sent to your email!')
+        
+    except User.DoesNotExist:
+        messages.error(request, 'Invalid session. Please login again.')
+        return redirect('accounts:login')
+    except Exception as e:
+        print(f"❌ 2FA Resend Error: {str(e)}")
+        messages.error(request, 'Failed to resend code. Please try again.')
+    
+    return redirect('accounts:login')
 
 
 class RegisterView(CreateView):

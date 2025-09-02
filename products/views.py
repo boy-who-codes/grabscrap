@@ -1,14 +1,10 @@
-from rest_framework import generics, permissions, status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.response import Response
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.http import JsonResponse
+
 from django.views.decorators.http import require_http_methods
 from .models import Product, ProductImage, Wishlist, Cart, CartItem
-from .serializers import ProductSerializer, ProductImageSerializer, WishlistSerializer
 from core.models import Category
 
 
@@ -131,11 +127,8 @@ def add_to_cart(request, product_id):
         cart_item.save()
     
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return JsonResponse({
-            'success': True,
-            'message': f'{product.title} added to cart',
-            'cart_count': cart.total_items
-        })
+        messages.success(request, f'{product.title} added to cart')
+        return redirect('products:cart')
     
     messages.success(request, f'{product.title} added to cart!')
     return redirect('products:detail', product_id=product_id)
@@ -155,12 +148,7 @@ def update_cart_item(request, item_id):
         cart_item.delete()
     
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        cart = cart_item.cart if quantity > 0 else Cart.objects.get(user=request.user)
-        return JsonResponse({
-            'success': True,
-            'cart_total': float(cart.total_amount),
-            'cart_count': cart.total_items
-        })
+        messages.success(request, 'Cart updated successfully')
     
     return redirect('products:cart')
 
@@ -174,108 +162,8 @@ def remove_from_cart(request, item_id):
     cart_item.delete()
     
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return JsonResponse({
-            'success': True,
-            'message': f'{product_title} removed from cart'
-        })
+        messages.success(request, f'{product_title} removed from cart')
+        return redirect('products:cart')
     
     messages.success(request, f'{product_title} removed from cart!')
     return redirect('products:cart')
-
-
-# API Views
-class ProductListView(generics.ListAPIView):
-    """Product list API"""
-    serializer_class = ProductSerializer
-    permission_classes = [permissions.AllowAny]
-    
-    def get_queryset(self):
-        queryset = Product.objects.filter(is_active=True)
-        category = self.request.query_params.get('category')
-        search = self.request.query_params.get('search')
-        
-        if category:
-            queryset = queryset.filter(category_id=category)
-        if search:
-            queryset = queryset.filter(title__icontains=search)
-            
-        return queryset.order_by('-created_at')
-
-
-class ProductDetailView(generics.RetrieveAPIView):
-    """Product detail API"""
-    serializer_class = ProductSerializer
-    permission_classes = [permissions.AllowAny]
-    queryset = Product.objects.filter(is_active=True)
-
-
-class VendorProductListView(generics.ListCreateAPIView):
-    """Vendor products management"""
-    serializer_class = ProductSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    
-    def get_queryset(self):
-        return Product.objects.filter(vendor__user=self.request.user)
-    
-    def perform_create(self, serializer):
-        vendor = self.request.user.vendor_profile
-        serializer.save(vendor=vendor)
-
-
-class VendorProductDetailView(generics.RetrieveUpdateDestroyAPIView):
-    """Vendor product detail management"""
-    serializer_class = ProductSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    
-    def get_queryset(self):
-        return Product.objects.filter(vendor__user=self.request.user)
-
-
-@api_view(['POST'])
-@permission_classes([permissions.IsAuthenticated])
-def toggle_wishlist(request, product_id):
-    """Toggle product in wishlist"""
-    try:
-        product = Product.objects.get(id=product_id, is_active=True)
-        wishlist_item, created = Wishlist.objects.get_or_create(
-            user=request.user,
-            product=product
-        )
-        
-        if not created:
-            wishlist_item.delete()
-            return Response({'message': 'Removed from wishlist', 'in_wishlist': False})
-        else:
-            return Response({'message': 'Added to wishlist', 'in_wishlist': True})
-            
-    except Product.DoesNotExist:
-        return Response({'error': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
-
-
-@api_view(['POST'])
-@permission_classes([permissions.IsAuthenticated])
-def api_add_to_cart(request, product_id):
-    """API endpoint to add product to cart"""
-    try:
-        product = Product.objects.get(id=product_id, is_active=True)
-        quantity = int(request.data.get('quantity', 1))
-        
-        cart, created = Cart.objects.get_or_create(user=request.user)
-        cart_item, created = CartItem.objects.get_or_create(
-            cart=cart, product=product,
-            defaults={'quantity': quantity}
-        )
-        
-        if not created:
-            cart_item.quantity += quantity
-            cart_item.save()
-        
-        return Response({
-            'success': True,
-            'message': f'{product.title} added to cart',
-            'cart_count': cart.total_items
-        })
-    except Product.DoesNotExist:
-        return Response({'error': 'Product not found'}, status=404)
-    except Exception as e:
-        return Response({'error': str(e)}, status=400)

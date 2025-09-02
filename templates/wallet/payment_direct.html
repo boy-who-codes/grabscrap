@@ -1,0 +1,266 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment - KABAADWALA™{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white text-center">
+                    <h4><i class="bi bi-credit-card"></i> Wallet Recharge Payment</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="text-center mb-4">
+                                <h2 class="text-success">₹{{ amount|floatformat:2 }}</h2>
+                                <p class="text-muted">Recharge Amount</p>
+                            </div>
+                            
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle"></i>
+                                Choose your preferred payment method below
+                            </div>
+                            
+                            <!-- Payment Methods -->
+                            <div class="payment-methods">
+                                <h6>Select Payment Method:</h6>
+                                
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <button class="btn btn-outline-primary w-100" onclick="openRazorpay('upi')">
+                                            <i class="bi bi-phone"></i> UPI
+                                        </button>
+                                    </div>
+                                    <div class="col-6">
+                                        <button class="btn btn-outline-primary w-100" onclick="openRazorpay('card')">
+                                            <i class="bi bi-credit-card"></i> Card
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <button class="btn btn-outline-primary w-100" onclick="openRazorpay('netbanking')">
+                                            <i class="bi bi-bank"></i> Net Banking
+                                        </button>
+                                    </div>
+                                    <div class="col-6">
+                                        <button class="btn btn-outline-primary w-100" onclick="openRazorpay('wallet')">
+                                            <i class="bi bi-wallet2"></i> Wallet
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <button class="btn btn-success btn-lg w-100" onclick="openRazorpay('all')">
+                                    <i class="bi bi-shield-check"></i> Pay ₹{{ amount|floatformat:2 }}
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6>Payment Details</h6>
+                            <div class="border rounded p-3">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Recharge Amount:</span>
+                                    <strong>₹{{ amount|floatformat:2 }}</strong>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Gateway Charges:</span>
+                                    <span class="text-success">FREE</span>
+                                </div>
+                                <hr>
+                                <div class="d-flex justify-content-between">
+                                    <strong>Total Amount:</strong>
+                                    <strong class="text-success">₹{{ amount|floatformat:2 }}</strong>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-3">
+                                <small class="text-muted">
+                                    <i class="bi bi-shield-check"></i>
+                                    Secured by Razorpay SSL encryption
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <a href="{% url 'wallet:recharge' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Back to Recharge
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden form for callback -->
+<form id="payment-form" method="post" action="{% url 'wallet:payment_callback' %}" style="display: none;">
+    {% csrf_token %}
+    <input type="hidden" name="razorpay_payment_id" id="razorpay_payment_id">
+    <input type="hidden" name="razorpay_order_id" id="razorpay_order_id">
+    <input type="hidden" name="razorpay_signature" id="razorpay_signature">
+    <input type="hidden" name="transaction_id" value="{{ transaction_id }}">
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+// Check if Razorpay loaded
+window.addEventListener('load', function() {
+    if (typeof Razorpay === 'undefined') {
+        console.error('❌ Razorpay library failed to load');
+        alert('Payment gateway not available. Please refresh the page or check your internet connection.');
+    } else {
+        console.log('✅ Razorpay library loaded successfully');
+    }
+});
+
+function openRazorpay(preferredMethod = 'all') {
+    console.log('🚀 Opening Razorpay payment with method:', preferredMethod);
+    console.log('🔍 Razorpay Debug Info:');
+    console.log('Key ID:', "{{ razorpay_key_id }}");
+    console.log('Order ID:', "{{ razorpay_order_id }}");
+    console.log('Amount (paise):', {{ amount_paise }});
+    console.log('User Name:', "{{ user_name }}");
+    console.log('User Email:', "{{ user_email }}");
+    console.log('User Phone:', "{{ user_phone }}");
+    
+    // Check if required fields are present
+    if (!"{{ razorpay_key_id }}" || "{{ razorpay_key_id }}" === "rzp_test_key") {
+        alert('❌ Razorpay Key ID not configured properly');
+        return;
+    }
+    
+    if (!"{{ razorpay_order_id }}") {
+        alert('❌ Razorpay Order ID missing');
+        return;
+    }
+    
+    if (!{{ amount_paise }} || {{ amount_paise }} <= 0) {
+        alert('❌ Invalid amount');
+        return;
+    }
+    
+    var methodConfig = {};
+    if (preferredMethod !== 'all') {
+        methodConfig[preferredMethod] = true;
+    } else {
+        methodConfig = {
+            "netbanking": true,
+            "card": true,
+            "upi": true,
+            "wallet": true,
+            "emi": true,
+            "paylater": true
+        };
+    }
+    
+    var options = {
+        "key": "{{ razorpay_key_id }}",
+        "amount": {{ amount_paise }},
+        "currency": "INR",
+        "name": "KABAADWALA™",
+        "description": "Wallet Recharge",
+        "order_id": "{{ razorpay_order_id }}",
+        "handler": function (response) {
+            console.log('✅ Payment successful:', response);
+            document.getElementById('razorpay_payment_id').value = response.razorpay_payment_id;
+            document.getElementById('razorpay_order_id').value = response.razorpay_order_id;
+            document.getElementById('razorpay_signature').value = response.razorpay_signature;
+            document.getElementById('payment-form').submit();
+        },
+        "prefill": {
+            "name": "{{ user_name }}",
+            "email": "{{ user_email }}",
+            "contact": "{{ user_phone }}"
+        },
+        "method": methodConfig,
+        "theme": {
+            "color": "#198754"
+        },
+        "modal": {
+            "ondismiss": function() {
+                console.log('❌ Payment cancelled by user');
+            },
+            "escape": true,
+            "backdropclose": false
+        }
+    };
+    
+    console.log('🔧 Razorpay options:', options);
+    
+    try {
+        // Check if Razorpay is loaded
+        if (typeof Razorpay === 'undefined') {
+            alert('❌ Razorpay library not loaded. Please refresh the page.');
+            return;
+        }
+        
+        console.log('🔧 Creating Razorpay instance...');
+        var rzp = new Razorpay(options);
+        console.log('✅ Razorpay instance created successfully');
+        
+        rzp.on('payment.failed', function (response) {
+            console.log('❌ Payment failed:', response.error);
+            console.log('Error code:', response.error.code);
+            console.log('Error description:', response.error.description);
+            console.log('Error source:', response.error.source);
+            console.log('Error step:', response.error.step);
+            console.log('Error reason:', response.error.reason);
+            
+            let errorMsg = 'Payment failed: ' + response.error.description;
+            if (response.error.code) {
+                errorMsg += ' (Code: ' + response.error.code + ')';
+            }
+            
+            // Add common failure reasons
+            const commonErrors = {
+                'BAD_REQUEST_ERROR': 'Invalid payment details. Please check your information.',
+                'GATEWAY_ERROR': 'Payment gateway issue. Please try again.',
+                'NETWORK_ERROR': 'Network connection issue. Please check your internet.',
+                'SERVER_ERROR': 'Server error. Please try again later.',
+                'AUTHENTICATION_ERROR': 'Payment authentication failed.',
+                'AUTHORIZATION_ERROR': 'Payment not authorized by bank.',
+                'INSUFFICIENT_FUNDS': 'Insufficient funds in your account.',
+                'TRANSACTION_LIMIT_EXCEEDED': 'Transaction limit exceeded.',
+                'CARD_DECLINED': 'Card declined by bank. Please try another card.',
+                'UPI_DECLINED': 'UPI payment declined. Please try again.'
+            };
+            
+            if (commonErrors[response.error.code]) {
+                errorMsg = commonErrors[response.error.code];
+            }
+            
+            alert(errorMsg);
+            
+            // Send error details to server for logging
+            fetch('/wallet/payment-error/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify({
+                    error: response.error,
+                    transaction_id: '{{ transaction_id }}'
+                })
+            });
+        });
+        
+        console.log('🚪 Opening Razorpay modal...');
+        rzp.open();
+        console.log('✅ Razorpay modal opened successfully');
+        
+    } catch (error) {
+        console.error('❌ Razorpay error:', error);
+        console.error('Error stack:', error.stack);
+        alert('Payment gateway error: ' + error.message + '\n\nPlease check console for details.');
+    }
+}
+</script>
+{% endblock %}

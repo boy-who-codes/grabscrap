@@ -49,7 +49,12 @@
 {% block extra_js %}
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
-document.getElementById('rzp-button').onclick = function(e) {
+function openRazorpay() {
+    console.log('🚀 Opening Razorpay payment');
+    console.log('Key ID:', "{{ razorpay_key_id }}");
+    console.log('Order ID:', "{{ razorpay_order_id }}");
+    console.log('Amount:', {{ amount|floatformat:0|mul:100 }});
+    
     var options = {
         "key": "{{ razorpay_key_id }}",
         "amount": {{ amount|floatformat:0|mul:100 }}, // Amount in paise
@@ -58,6 +63,7 @@ document.getElementById('rzp-button').onclick = function(e) {
         "description": "Wallet Recharge",
         "order_id": "{{ razorpay_order_id }}",
         "handler": function (response) {
+            console.log('✅ Payment successful:', response);
             // Payment successful
             document.getElementById('razorpay_payment_id').value = response.razorpay_payment_id;
             document.getElementById('razorpay_order_id').value = response.razorpay_order_id;
@@ -69,6 +75,14 @@ document.getElementById('rzp-button').onclick = function(e) {
             "email": "{{ user_email }}",
             "contact": "{{ user_phone }}"
         },
+        "method": {
+            "netbanking": true,
+            "card": true,
+            "upi": true,
+            "wallet": true,
+            "emi": true,
+            "paylater": true
+        },
         "notes": {
             "transaction_id": "{{ transaction_id }}"
         },
@@ -77,14 +91,34 @@ document.getElementById('rzp-button').onclick = function(e) {
         },
         "modal": {
             "ondismiss": function() {
+                console.log('❌ Payment cancelled by user');
                 // Payment cancelled
                 window.location.href = "{% url 'wallet:recharge' %}";
             }
         }
     };
     
-    var rzp = new Razorpay(options);
-    rzp.open();
+    try {
+        console.log('🔧 Creating Razorpay instance...');
+        var rzp = new Razorpay(options);
+        console.log('✅ Razorpay instance created');
+        
+        rzp.on('payment.failed', function (response) {
+            console.log('❌ Payment failed:', response.error);
+            alert('Payment failed: ' + response.error.description);
+        });
+        
+        console.log('🚪 Opening Razorpay modal...');
+        rzp.open();
+        console.log('✅ Razorpay modal opened');
+    } catch (error) {
+        console.error('❌ Razorpay error:', error);
+        alert('Payment gateway error: ' + error.message);
+    }
+}
+
+document.getElementById('rzp-button').onclick = function(e) {
+    openRazorpay();
     e.preventDefault();
 }
 </script>

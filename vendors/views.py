@@ -3,11 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Sum, Count, Q
 from django.utils import timezone
-from rest_framework import generics, permissions, status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.response import Response
 from .models import Vendor, VendorKYC, VendorPayout
-from .serializers import VendorSerializer, VendorKYCSerializer, VendorPayoutSerializer, VendorRegistrationSerializer
 from orders.models import Order
 from products.models import Product
 
@@ -153,9 +149,29 @@ def vendor_orders(request):
 def vendor_products(request):
     """Vendor products management"""
     vendor = get_object_or_404(Vendor, user=request.user)
+    
+    # Check KYC status
+    if not vendor.can_sell():
+        if vendor.kyc_status == 'pending':
+            messages.warning(request, 'Your KYC verification is pending. You cannot add products until approved.')
+        elif vendor.kyc_status == 'rejected':
+            messages.error(request, f'Your KYC was rejected: {vendor.kyc_rejection_reason}. Please resubmit your documents.')
+        else:
+            messages.error(request, 'Your account is not active. Please contact support.')
+        
+        return render(request, 'vendors/products.html', {
+            'vendor': vendor, 
+            'products': [],
+            'kyc_blocked': True
+        })
+    
     products = Product.objects.filter(vendor=vendor).order_by('-created_at')
     
-    return render(request, 'vendors/products.html', {'vendor': vendor, 'products': products})
+    return render(request, 'vendors/products.html', {
+        'vendor': vendor, 
+        'products': products,
+        'kyc_blocked': False
+    })
 
 
 @login_required
@@ -199,85 +215,3 @@ def vendor_payouts(request):
     }
     
     return render(request, 'vendors/payouts.html', context)
-
-
-# API Views
-class VendorProfileView(generics.RetrieveUpdateAPIView):
-    serializer_class = VendorSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    
-    def get_object(self):
-        return Vendor.objects.get(user=self.request.user)
-
-
-@api_view(['POST'])
-@permission_classes([permissions.IsAuthenticated])
-def vendor_registration(request):
-    """Register as vendor with KYC"""
-    if hasattr(request.user, 'vendor_profile'):
-        return Response({'error': 'User already registered as vendor'}, status=status.HTTP_400_BAD_REQUEST)
-    
-    serializer = VendorRegistrationSerializer(data=request.data)
-    if serializer.is_valid():
-        vendor = serializer.save(user=request.user)
-        return Response({
-            'message': 'Vendor registration successful. KYC under review.',
-            'vendor_id': vendor.id
-        }, status=status.HTTP_201_CREATED)
-    
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class VendorKYCView(generics.RetrieveUpdateAPIView):
-    serializer_class = VendorKYCSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    
-    def get_object(self):
-        vendor = Vendor.objects.get(user=self.request.user)
-        return vendor.kyc_documents
-
-
-class VendorPayoutListView(generics.ListCreateAPIView):
-    serializer_class = VendorPayoutSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    
-    def get_queryset(self):
-        vendor = Vendor.objects.get(user=self.request.user)
-        return VendorPayout.objects.filter(vendor=vendor)
-    
-    def perform_create(self, serializer):
-        vendor = Vendor.objects.get(user=self.request.user)
-        serializer.save(vendor=vendor)
-
-
-@api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
-def vendor_analytics(request):
-    """Get vendor analytics data"""
-    try:
-        vendor = Vendor.objects.get(user=request.user)
-        
-        # Calculate analytics
-        total_products = vendor.products.count()
-        active_products = vendor.products.filter(is_active=True).count()
-        total_orders = Order.objects.filter(vendor=vendor).count()
-        pending_orders = Order.objects.filter(vendor=vendor, order_status__in=['placed', 'confirmed', 'packed']).count()
-        completed_orders = Order.objects.filter(vendor=vendor, order_status='completed').count()
-        total_revenue = Order.objects.filter(vendor=vendor, order_status='completed').aggregate(
-            total=Sum('total_amount'))['total'] or 0
-        
-        analytics = {
-            'total_products': total_products,
-            'active_products': active_products,
-            'total_orders': total_orders,
-            'pending_orders': pending_orders,
-            'completed_orders': completed_orders,
-            'total_revenue': float(total_revenue),
-            'kyc_status': vendor.kyc_status,
-            'store_name': vendor.store_name,
-        }
-        
-        return Response(analytics)
-        
-    except Vendor.DoesNotExist:
-        return Response({'error': 'Vendor profile not found'}, status=status.HTTP_404_NOT_FOUND)

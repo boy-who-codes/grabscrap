@@ -1,13 +1,52 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_http_methods, require_POST
 from django.contrib import messages
 from django.core.files.storage import default_storage
+from django.http import JsonResponse
+from django.core.mail import send_mail
+from django.conf import settings
 from .models import ChatRoom, ChatMessage, ChatModeration
 from .utils import compress_image
+from products.models import Product
 import uuid
 import os
+
+
+@login_required
+@require_POST
+def create_product_chat(request, product_id):
+    """Create or get chat room for product inquiry"""
+    try:
+        product = get_object_or_404(Product, id=product_id)
+        
+        # Check if chat room already exists between user and vendor for this product
+        existing_room = ChatRoom.objects.filter(
+            product=product,
+            participants=request.user
+        ).filter(participants=product.vendor.user).first()
+        
+        if existing_room:
+            return JsonResponse({'room_id': str(existing_room.id)})
+        
+        # Create new chat room
+        room = ChatRoom.objects.create(
+            product=product,
+            room_type='product_inquiry'
+        )
+        room.participants.add(request.user, product.vendor.user)
+        
+        # Send initial message
+        ChatMessage.objects.create(
+            room=room,
+            sender=request.user,
+            message=f"Hi! I'm interested in your product: {product.title}"
+        )
+        
+        return JsonResponse({'room_id': str(room.id)})
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
 
 
 @login_required
@@ -126,25 +165,17 @@ def send_message(request, room_id):
         # Update room activity
         room.save()  # This updates last_activity
         
-        # For AJAX requests, return JSON
+        # For AJAX requests, redirect back to room
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({
-                'id': str(message.id),
-                'content': message.content,
-                'message_type': message.message_type,
-                'attachments': message.attachments,
-                'sender': message.sender.full_name or message.sender.username,
-                'created_at': message.created_at.strftime('%H:%M'),
-                'is_flagged': message.is_flagged
-            })
+            messages.success(request, 'Message sent successfully!')
         
         return redirect('chat:room', room_id=room_id)
         
     except Exception as e:
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({'error': str(e)}, status=500)
-        
-        messages.error(request, f'Failed to send message: {str(e)}')
+            messages.error(request, f'Failed to send message: {str(e)}')
+        else:
+            messages.error(request, f'Failed to send message: {str(e)}')
         return redirect('chat:room', room_id=room_id)
 
 

@@ -127,7 +127,7 @@ def send_login_alert(user, login_history, request=None):
     
     send_mail(
         subject=subject,
-        message=f'New login detected from {login_history.location_info.get("city", "Unknown")}',
+        message=f'New login detected from IP: {login_history.ip_address}',
         from_email=from_email,
         recipient_list=[user.email],
         html_message=html_message,

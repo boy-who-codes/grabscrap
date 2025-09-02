@@ -28,6 +28,14 @@ class Vendor(BaseModel):
     
     def __str__(self):
         return self.store_name
+    
+    def can_sell(self):
+        """Check if vendor can sell products"""
+        return self.kyc_status == 'approved' and self.is_active
+    
+    @property
+    def is_kyc_approved(self):
+        return self.kyc_status == 'approved'
 
 
 class VendorKYC(BaseModel):

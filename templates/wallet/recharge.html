@@ -21,24 +21,25 @@
                                 <div class="mb-3">
                                     <label class="form-label">Recharge Amount</label>
                                     <input type="number" class="form-control" name="amount" 
-                                           min="100" max="50000" step="1" required 
-                                           placeholder="Enter amount (₹100 - ₹50,000)">
-                                    <div class="form-text">Minimum: ₹100, Maximum: ₹50,000</div>
+                                           min="100" step="1" required 
+                                           value="{{ prefill_amount }}"
+                                           placeholder="Enter amount (Minimum ₹100)">
+                                    <div class="form-text">Minimum: ₹100 (No maximum limit)</div>
                                 </div>
                                 
                                 <div class="mb-3">
                                     <div class="row">
                                         <div class="col-4">
                                             <button type="button" class="btn btn-outline-primary w-100" 
-                                                    onclick="setAmount(500)">₹500</button>
+                                                    onclick="setAmount(5000)">₹5,000</button>
                                         </div>
                                         <div class="col-4">
                                             <button type="button" class="btn btn-outline-primary w-100" 
-                                                    onclick="setAmount(1000)">₹1,000</button>
+                                                    onclick="setAmount(10000)">₹10,000</button>
                                         </div>
                                         <div class="col-4">
                                             <button type="button" class="btn btn-outline-primary w-100" 
-                                                    onclick="setAmount(2000)">₹2,000</button>
+                                                    onclick="setAmount(25000)">₹25,000</button>
                                         </div>
                                     </div>
                                 </div>

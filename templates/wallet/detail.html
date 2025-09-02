@@ -75,6 +75,9 @@
                                         <span class="badge bg-{% if transaction.status == 'completed' %}success{% elif transaction.status == 'failed' %}danger{% else %}warning{% endif %}">
                                             {{ transaction.get_status_display }}
                                         </span>
+                                        {% if transaction.status == 'failed' %}
+                                            <br><small class="text-danger">{{ transaction.description|truncatechars:100 }}</small>
+                                        {% endif %}
                                     </td>
                                     <td>{{ transaction.description|truncatechars:50 }}</td>
                                 </tr>
@@ -135,10 +138,11 @@
             </div>
             <div class="modal-body">
                 <form id="rechargeForm">
+                    {% csrf_token %}
                     <div class="mb-3">
                         <label class="form-label">Amount (₹)</label>
-                        <input type="number" class="form-control" name="amount" min="10" max="50000" required>
-                        <div class="form-text">Minimum: ₹10, Maximum: ₹50,000</div>
+                        <input type="number" class="form-control" name="amount" min="100" max="100000" required>
+                        <div class="form-text">Minimum: ₹100, Maximum: ₹1,00,000</div>
                     </div>
                     
                     <div class="mb-3">
@@ -148,6 +152,7 @@
                             <option value="upi">UPI</option>
                             <option value="card">Credit/Debit Card</option>
                             <option value="netbanking">Net Banking</option>
+                            <option value="wallet">Digital Wallet</option>
                         </select>
                     </div>
                     
@@ -161,4 +166,38 @@
         </div>
     </div>
 </div>
+
+<script>
+document.getElementById('rechargeForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const amount = this.amount.value;
+    const paymentMethod = this.payment_method.value;
+    
+    if (amount && paymentMethod) {
+        // Close modal first
+        const modal = bootstrap.Modal.getInstance(document.getElementById('rechargeModal'));
+        modal.hide();
+        
+        // Redirect to recharge page with form data
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/wallet/recharge/';
+        
+        const csrfToken = document.createElement('input');
+        csrfToken.type = 'hidden';
+        csrfToken.name = 'csrfmiddlewaretoken';
+        csrfToken.value = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        const amountInput = document.createElement('input');
+        amountInput.type = 'hidden';
+        amountInput.name = 'amount';
+        amountInput.value = amount;
+        
+        form.appendChild(csrfToken);
+        form.appendChild(amountInput);
+        document.body.appendChild(form);
+        form.submit();
+    }
+});
+</script>
 {% endblock %}

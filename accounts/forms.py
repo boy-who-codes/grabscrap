@@ -11,7 +11,7 @@ class UnifiedSignupForm(UserCreationForm):
     """Unified signup form for customers, vendors, and admins"""
     
     user_type = forms.ChoiceField(
-        choices=User.USER_TYPES,
+        choices=[],  # Will be set in __init__
         widget=forms.RadioSelect(attrs={'class': 'form-check-input'}),
         initial='customer',
         label='Account Type'
@@ -39,6 +39,13 @@ class UnifiedSignupForm(UserCreationForm):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        
+        # Filter out admin from user type choices
+        self.fields['user_type'].choices = [
+            choice for choice in User.USER_TYPES 
+            if choice[0] != 'admin'
+        ]
+        
         self.fields['password1'].widget.attrs.update({
             'class': 'form-control',
             'placeholder': 'Create a strong password'
@@ -62,6 +69,14 @@ class UnifiedSignupForm(UserCreationForm):
             raise ValidationError("Store name is required for vendor accounts")
         
         return store_name
+    
+    def clean_user_type(self):
+        user_type = self.cleaned_data.get('user_type')
+        
+        if user_type == 'admin':
+            raise ValidationError("Admin accounts cannot be created through signup")
+        
+        return user_type
     
     def save(self, commit=True):
         user = super().save(commit=False)

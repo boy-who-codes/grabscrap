@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.db.models import Count, Sum, Q, Avg
 from django.utils import timezone
 from datetime import timedelta
-from django.http import JsonResponse
+
 from django.views.decorators.http import require_POST
 from django.core.paginator import Paginator
 

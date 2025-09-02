@@ -1,13 +1,76 @@
-kabaadwala_env/
-__pycache__/
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
 *.pyc
 *.pyo
 *.pyd
-.git/
-.gitignore
-README.md
-*.md
-.env
+.Python
+env
+pip-log.txt
+pip-delete-this-directory.txt
+.tox
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.git
+.mypy_cache
+.pytest_cache
+.hypothesis
+
+# Virtual Environment
+kabaadwala_env/
+venv/
+ENV/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Local development
+.env.dev
+.env.local
+*.sqlite3
+db.sqlite3
+
+# Media files (will be handled by volumes)
+media/
+
+# Static files (will be collected)
+staticfiles/
+
+# Logs
+*.log
 logs/
-celerybeat-schedule
-dump.rdb
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Documentation
+README.md
+docs/
+
+# Test files
+test_*.py
+tests/

@@ -1,50 +1,53 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.utils import timezone
 from .models import Coupon, CouponUsage
-import json
 
 
 @require_POST
 def validate_coupon(request):
-    """AJAX endpoint to validate coupon code"""
-    try:
-        data = json.loads(request.body)
-        code = data.get('code', '').strip().upper()
-        order_amount = float(data.get('order_amount', 0))
-        
-        if not code:
-            return JsonResponse({'valid': False, 'message': 'Please enter a coupon code'})
-        
+    """Validate coupon code"""
+    if request.method == 'POST':
         try:
-            coupon = Coupon.objects.get(code=code)
-        except Coupon.DoesNotExist:
-            return JsonResponse({'valid': False, 'message': 'Invalid coupon code'})
-        
-        # Check if user is authenticated
-        if not request.user.is_authenticated:
-            return JsonResponse({'valid': False, 'message': 'Please login to use coupons'})
-        
-        # Validate coupon
-        is_valid, message = coupon.can_use(request.user, order_amount)
-        
-        if is_valid:
-            discount = coupon.calculate_discount(order_amount)
-            return JsonResponse({
-                'valid': True,
-                'message': 'Coupon applied successfully!',
-                'discount': float(discount),
-                'coupon_id': str(coupon.id),
-                'code': coupon.code
-            })
-        else:
-            return JsonResponse({'valid': False, 'message': message})
+            code = request.POST.get('code', '').strip().upper()
+            order_amount = float(request.POST.get('order_amount', 0))
             
-    except Exception as e:
-        return JsonResponse({'valid': False, 'message': 'Error validating coupon'})
+            if not code:
+                messages.error(request, 'Please enter a coupon code')
+                return redirect('coupons:list')
+            
+            try:
+                coupon = Coupon.objects.get(code=code)
+            except Coupon.DoesNotExist:
+                messages.error(request, 'Invalid coupon code')
+                return redirect('coupons:list')
+            
+            # Check if user is authenticated
+            if not request.user.is_authenticated:
+                messages.error(request, 'Please login to use coupons')
+                return redirect('accounts:login')
+            
+            # Validate coupon
+            is_valid, message = coupon.can_use(request.user, order_amount)
+            
+            if is_valid:
+                discount = coupon.calculate_discount(order_amount)
+                messages.success(request, f'Coupon applied successfully! Discount: ₹{discount}')
+                # Store coupon in session for checkout
+                request.session['applied_coupon'] = {
+                    'id': str(coupon.id),
+                    'code': coupon.code,
+                    'discount': float(discount)
+                }
+            else:
+                messages.error(request, message)
+                
+        except Exception as e:
+            messages.error(request, 'Error validating coupon')
+    
+    return redirect('coupons:list')
 
 
 @login_required

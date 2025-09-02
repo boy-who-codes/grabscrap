@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db import transaction
 from django.core.paginator import Paginator
-from django.http import JsonResponse
+
 from django.views.decorators.http import require_POST
 
 from .models import Order, OrderItem
@@ -86,12 +86,12 @@ def create_order(request):
                         user=request.user,
                         vendor=vendor,
                         delivery_address={
-                            'name': address.full_name,
-                            'phone': address.phone_number,
+                            'name': address.recipient_name,
+                            'phone': address.recipient_phone,
                             'address': address.street_address,
                             'city': address.city,
                             'state': address.state,
-                            'postal_code': address.postal_code,
+                            'postal_code': address.pincode,
                             'address_type': address.address_type
                         },
                         subtotal=0,
@@ -109,8 +109,14 @@ def create_order(request):
                     order=vendor_orders[vendor],
                     product=item.product,
                     quantity=item.quantity,
-                    price=item.product.price,
-                    total_price=item.total_price
+                    unit_price=item.product.price,
+                    total_price=item.total_price,
+                    product_snapshot={
+                        'title': item.product.title,
+                        'description': item.product.description,
+                        'price': float(item.product.price),
+                        'category': item.product.category.name if item.product.category else None,
+                    }
                 )
                 
                 # Update order totals

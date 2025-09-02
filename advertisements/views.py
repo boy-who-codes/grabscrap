@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404, redirect
-from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
+from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 from .models import Advertisement, AdClick, AdImpression
 import json
@@ -39,9 +39,11 @@ def track_impression(request):
         ad.impressions += 1
         ad.save(update_fields=['impressions'])
         
-        return JsonResponse({'status': 'success'})
+        messages.success(request, 'Ad impression tracked')
+        return redirect('core:home')
     except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)})
+        messages.error(request, f'Error tracking impression: {str(e)}')
+        return redirect('core:home')
 
 
 def track_click(request, ad_id):

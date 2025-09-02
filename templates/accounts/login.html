@@ -43,13 +43,22 @@
                             <button type="submit" class="btn btn-success btn-lg w-100 mb-3">
                                 <i class="bi bi-check-circle"></i> Verify & Login
                             </button>
-                            
-                            <div class="text-center">
-                                <a href="{% url 'accounts:login' %}" class="text-muted">
-                                    <i class="bi bi-arrow-left"></i> Back to login
-                                </a>
-                            </div>
                         </form>
+                        
+                        <div class="text-center mb-3">
+                            <form method="post" action="{% url 'accounts:resend_2fa_otp' %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-secondary btn-sm">
+                                    <i class="bi bi-arrow-clockwise"></i> Resend Code
+                                </button>
+                            </form>
+                        </div>
+                        
+                        <div class="text-center">
+                            <a href="{% url 'accounts:login' %}" class="text-muted">
+                                <i class="bi bi-arrow-left"></i> Back to login
+                            </a>
+                        </div>
                     {% else %}
                         <!-- Step 1: Username/Password -->
                         <form method="post">
