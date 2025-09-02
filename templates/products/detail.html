@@ -165,7 +165,7 @@ function startChat(productId) {
     .then(response => response.json())
     .then(data => {
         if (data.room_id) {
-            window.location.href = `/chat/dashboard/${data.room_id}/`;
+            window.location.href = `/chat/room/${data.room_id}/`;
         } else if (data.error) {
             alert(data.error);
         }

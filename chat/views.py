@@ -20,6 +20,10 @@ def create_product_chat(request, product_id):
     try:
         product = get_object_or_404(Product, id=product_id)
         
+        # Don't allow chat with own products
+        if product.vendor.user == request.user:
+            return JsonResponse({'error': 'You cannot chat about your own product'}, status=400)
+        
         # Check if chat room already exists between user and vendor for this product
         existing_room = ChatRoom.objects.filter(
             product=product,
@@ -32,7 +36,8 @@ def create_product_chat(request, product_id):
         # Create new chat room
         room = ChatRoom.objects.create(
             product=product,
-            room_type='product_inquiry'
+            room_type='product_inquiry',
+            name=f"Chat about {product.title}"
         )
         room.participants.add(request.user, product.vendor.user)
         
@@ -45,6 +50,64 @@ def create_product_chat(request, product_id):
         
         return JsonResponse({'room_id': str(room.id)})
         
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+
+@login_required
+@require_POST
+def mark_messages_read(request, room_id):
+    """Mark messages as read"""
+    try:
+        room = get_object_or_404(ChatRoom, id=room_id, participants=request.user)
+        ChatMessage.objects.filter(
+            room=room,
+            is_read=False
+        ).exclude(sender=request.user).update(is_read=True)
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+
+@login_required
+@require_POST
+def send_chat_notification(request):
+    """Send email notification for new chat message"""
+    try:
+        import json
+        data = json.loads(request.body)
+        room_id = data.get('room_id')
+        sender = data.get('sender')
+        message = data.get('message')
+        
+        room = get_object_or_404(ChatRoom, id=room_id)
+        
+        # Get recipient (other participant)
+        recipient = room.participants.exclude(username=sender).first()
+        
+        if recipient and recipient.email:
+            subject = f"New message from {sender} - KABAADWALA™"
+            email_message = f"""
+You have received a new message on KABAADWALA™:
+
+From: {sender}
+Message: {message}
+
+Reply at: http://127.0.0.1:8000/chat/room/{room_id}/
+
+---
+KABAADWALA™ Team
+            """
+            
+            send_mail(
+                subject=subject,
+                message=email_message,
+                from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'KABAADWALA <noreply@kabaadwala.com>'),
+                recipient_list=[recipient.email],
+                fail_silently=True
+            )
+        
+        return JsonResponse({'success': True})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
 
