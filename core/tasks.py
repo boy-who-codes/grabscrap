@@ -164,3 +164,15 @@ def generate_daily_report():
     
     logger.info(f'Daily report generated: {report}')
     return report
+
+
+@shared_task
+def send_email_with_fallback(task_func, *args, **kwargs):
+    """Execute email task with fallback to synchronous execution"""
+    try:
+        # Try to execute the task
+        return task_func.delay(*args, **kwargs)
+    except Exception as e:
+        logger.warning(f"Async task failed, executing synchronously: {e}")
+        # Fallback to synchronous execution
+        return task_func(*args, **kwargs)

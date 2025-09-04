@@ -21,14 +21,14 @@ def create_product_chat(request, product_id):
         product = get_object_or_404(Product, id=product_id)
         
         # Don't allow chat with own products
-        if product.vendor.user == request.user:
+        if hasattr(product.vendor, 'user') and product.vendor.user == request.user:
             return JsonResponse({'error': 'You cannot chat about your own product'}, status=400)
         
         # Check if chat room already exists between user and vendor for this product
         existing_room = ChatRoom.objects.filter(
             product=product,
-            participants=request.user
-        ).filter(participants=product.vendor.user).first()
+            participants__in=[request.user]
+        ).filter(participants__in=[product.vendor.user]).first()
         
         if existing_room:
             return JsonResponse({'room_id': str(existing_room.id)})
@@ -36,7 +36,7 @@ def create_product_chat(request, product_id):
         # Create new chat room
         room = ChatRoom.objects.create(
             product=product,
-            room_type='product_inquiry',
+            room_type='product',
             name=f"Chat about {product.title}"
         )
         room.participants.add(request.user, product.vendor.user)
@@ -47,6 +47,14 @@ def create_product_chat(request, product_id):
             sender=request.user,
             message=f"Hi! I'm interested in your product: {product.title}"
         )
+        
+        return JsonResponse({'room_id': str(room.id)})
+        
+    except Product.DoesNotExist:
+        return JsonResponse({'error': 'Product not found'}, status=404)
+    except Exception as e:
+        print(f"Chat creation error: {e}")  # Debug print
+        return JsonResponse({'error': 'Failed to create chat room'}, status=500)
         
         return JsonResponse({'room_id': str(room.id)})
         

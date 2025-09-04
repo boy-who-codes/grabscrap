@@ -154,6 +154,7 @@ function toggleWishlist(productId) {
 }
 
 function startChat(productId) {
+    {% if user.is_authenticated %}
     // Create or get chat room for this product
     fetch(`/chat/api/products/${productId}/chat/`, {
         method: 'POST',
@@ -168,12 +169,18 @@ function startChat(productId) {
             window.location.href = `/chat/room/${data.room_id}/`;
         } else if (data.error) {
             alert(data.error);
+        } else {
+            alert('Failed to create chat room');
         }
     })
     .catch(error => {
         console.error('Error:', error);
         alert('Failed to start chat. Please try again.');
     });
+    {% else %}
+    alert('Please login to start a chat');
+    window.location.href = '/accounts/login/';
+    {% endif %}
 }
 </script>
 {% endblock %}
