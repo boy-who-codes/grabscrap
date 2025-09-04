@@ -2,52 +2,319 @@
 
 {% block title %}Create Account - KABAADWALA™{% endblock %}
 
+{% block extra_css %}
+<style>
+    .signup-container {
+        background: linear-gradient(135deg, #16a34a, #22c55e);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+    .signup-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        border: none;
+    }
+    .signup-header {
+        background: linear-gradient(135deg, #16a34a, #22c55e);
+        color: white;
+        border-radius: 15px 15px 0 0;
+        padding: 2rem;
+        text-align: center;
+    }
+    .account-type-card {
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .account-type-card:hover {
+        border-color: #16a34a;
+        transform: translateY(-2px);
+    }
+    .account-type-card.selected {
+        border-color: #16a34a;
+        background-color: #f0fdf4;
+    }
+    .btn-success-custom {
+        background: linear-gradient(135deg, #16a34a, #22c55e);
+        border: none;
+        padding: 12px 30px;
+        border-radius: 8px;
+        font-weight: 600;
+    }
+    .btn-success-custom:hover {
+        background: linear-gradient(135deg, #15803d, #16a34a);
+        transform: translateY(-1px);
+    }
+    .otp-section {
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+        border-left: 4px solid #16a34a;
+    }
+    .otp-input {
+        font-size: 1.2rem;
+        text-align: center;
+        letter-spacing: 0.5rem;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8 col-lg-6">
-        <div class="card shadow">
-            <div class="card-header bg-success text-white text-center">
-                <h4><i class="bi bi-person-plus"></i> Create Your Account</h4>
-                <p class="mb-0 small">Join KABAADWALA™ as a buyer or seller</p>
-            </div>
-            <div class="card-body">
-                <form method="post" novalidate id="signupForm">
-                    {% csrf_token %}
-                    
-                    {% if form.non_field_errors %}
-                        <div class="alert alert-danger">
-                            {{ form.non_field_errors }}
-                        </div>
-                    {% endif %}
-                    
-                    <!-- Account Type Selection -->
-                    <div class="mb-4">
-                        <label class="form-label fw-bold">
-                            <i class="bi bi-person-badge"></i> I want to join as: *
-                        </label>
-                        <div class="row">
-                            {% for value, label in form.account_type.field.choices %}
-                            <div class="col-md-6 mb-2">
-                                <div class="card account-type-card" data-type="{{ value }}">
-                                    <div class="card-body text-center p-3">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="account_type" 
-                                                   id="account_type_{{ value }}" value="{{ value }}" 
-                                                   {% if form.account_type.value == value %}checked{% endif %}>
-                                            <label class="form-check-label w-100" for="account_type_{{ value }}">
-                                                {% if value == 'buyer' %}
-                                                    <i class="bi bi-cart3 display-6 text-primary"></i>
-                                                    <h6 class="mt-2">Buyer</h6>
-                                                    <small class="text-muted">Buy scrap materials</small>
-                                                {% else %}
-                                                    <i class="bi bi-shop display-6 text-success"></i>
-                                                    <h6 class="mt-2">Seller</h6>
-                                                    <small class="text-muted">Sell scrap materials</small>
-                                                {% endif %}
-                                            </label>
+<div class="signup-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card signup-card">
+                    <div class="signup-header">
+                        <h3><i class="bi bi-recycle"></i> Join KABAADWALA™</h3>
+                        <p class="mb-0">Create your account to start buying or selling scrap</p>
+                    </div>
+                    <div class="card-body p-4">
+                        <form method="post" novalidate id="signupForm">
+                            {% csrf_token %}
+                            
+                            {% if form.non_field_errors %}
+                                <div class="alert alert-danger">
+                                    {{ form.non_field_errors }}
+                                </div>
+                            {% endif %}
+                            
+                            <!-- Account Type Selection -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold text-success">
+                                    <i class="bi bi-person-badge"></i> I want to join as: *
+                                </label>
+                                <div class="row">
+                                    <div class="col-md-6 mb-2">
+                                        <div class="account-type-card" data-type="customer">
+                                            <div class="card-body text-center p-3">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="user_type" 
+                                                           id="user_type_customer" value="customer" checked>
+                                                    <label class="form-check-label w-100" for="user_type_customer">
+                                                        <i class="bi bi-cart3 display-6 text-success"></i>
+                                                        <h6 class="mt-2">Buyer</h6>
+                                                        <small class="text-muted">Buy scrap materials</small>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-2">
+                                        <div class="account-type-card" data-type="vendor">
+                                            <div class="card-body text-center p-3">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="user_type" 
+                                                           id="user_type_vendor" value="vendor">
+                                                    <label class="form-check-label w-100" for="user_type_vendor">
+                                                        <i class="bi bi-shop display-6 text-success"></i>
+                                                        <h6 class="mt-2">Seller</h6>
+                                                        <small class="text-muted">Sell scrap materials</small>
+                                                    </label>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+
+                            <!-- Personal Information -->
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Full Name *</label>
+                                    {{ form.full_name }}
+                                    {% if form.full_name.errors %}
+                                        <div class="text-danger small">{{ form.full_name.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Email Address *</label>
+                                    {{ form.email }}
+                                    {% if form.email.errors %}
+                                        <div class="text-danger small">{{ form.email.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Mobile Number with OTP -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Mobile Number *</label>
+                                <div class="input-group">
+                                    {{ form.mobile_number }}
+                                    <button type="button" class="btn btn-outline-success" id="sendOtpBtn">
+                                        <i class="bi bi-phone"></i> Send OTP
+                                    </button>
+                                </div>
+                                {% if form.mobile_number.errors %}
+                                    <div class="text-danger small">{{ form.mobile_number.errors.0 }}</div>
+                                {% endif %}
+                                
+                                <!-- OTP Verification Section -->
+                                <div class="otp-section" id="otpSection" style="display: none;">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold">Enter OTP</label>
+                                            <input type="text" class="form-control otp-input" id="phoneOtp" 
+                                                   placeholder="000000" maxlength="6">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <button type="button" class="btn btn-sm btn-success" id="verifyOtpBtn">
+                                                <i class="bi bi-check-circle"></i> Verify
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-success ms-2" id="resendOtpBtn">
+                                                <i class="bi bi-arrow-clockwise"></i> Resend
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {% if settings.DEBUG %}
+                                    <div class="alert alert-info mt-2 small">
+                                        <strong>Development Mode:</strong> OTP is <span id="debugOtp">------</span>
+                                    </div>
+                                    {% endif %}
+                                    <div class="text-success small mt-2" id="otpStatus" style="display: none;">
+                                        <i class="bi bi-check-circle-fill"></i> Phone number verified!
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Store Name (for vendors) -->
+                            <div class="mb-3" id="storeNameField" style="display: none;">
+                                <label class="form-label fw-bold">Store/Business Name *</label>
+                                {{ form.store_name }}
+                                {% if form.store_name.errors %}
+                                    <div class="text-danger small">{{ form.store_name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Password Fields -->
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Password *</label>
+                                    {{ form.password1 }}
+                                    {% if form.password1.errors %}
+                                        <div class="text-danger small">{{ form.password1.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Confirm Password *</label>
+                                    {{ form.password2 }}
+                                    {% if form.password2.errors %}
+                                        <div class="text-danger small">{{ form.password2.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-success-custom btn-lg" id="submitBtn" disabled>
+                                    <i class="bi bi-person-plus"></i> Create Account
+                                </button>
+                            </div>
+                        </form>
+
+                        <div class="text-center mt-4">
+                            <p class="text-muted">Already have an account? 
+                                <a href="{% url 'accounts:login' %}" class="text-success fw-bold">Login here</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const accountTypeCards = document.querySelectorAll('.account-type-card');
+    const storeNameField = document.getElementById('storeNameField');
+    const sendOtpBtn = document.getElementById('sendOtpBtn');
+    const otpSection = document.getElementById('otpSection');
+    const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+    const resendOtpBtn = document.getElementById('resendOtpBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    const mobileInput = document.querySelector('input[name="mobile_number"]');
+    const otpInput = document.getElementById('phoneOtp');
+    
+    let isPhoneVerified = false;
+    let currentOtp = '';
+
+    // Account type selection
+    accountTypeCards.forEach(card => {
+        card.addEventListener('click', function() {
+            accountTypeCards.forEach(c => c.classList.remove('selected'));
+            this.classList.add('selected');
+            
+            const radio = this.querySelector('input[type="radio"]');
+            radio.checked = true;
+            
+            if (radio.value === 'vendor') {
+                storeNameField.style.display = 'block';
+            } else {
+                storeNameField.style.display = 'none';
+            }
+        });
+    });
+
+    // Send OTP
+    sendOtpBtn.addEventListener('click', function() {
+        const mobile = mobileInput.value.trim();
+        if (!mobile) {
+            alert('Please enter mobile number');
+            return;
+        }
+        
+        // Simulate OTP generation (in real app, this would be an API call)
+        currentOtp = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        {% if settings.DEBUG %}
+        document.getElementById('debugOtp').textContent = currentOtp;
+        {% endif %}
+        
+        otpSection.style.display = 'block';
+        sendOtpBtn.textContent = 'OTP Sent';
+        sendOtpBtn.disabled = true;
+        
+        // Re-enable after 30 seconds
+        setTimeout(() => {
+            sendOtpBtn.disabled = false;
+            sendOtpBtn.innerHTML = '<i class="bi bi-phone"></i> Send OTP';
+        }, 30000);
+    });
+
+    // Verify OTP
+    verifyOtpBtn.addEventListener('click', function() {
+        const enteredOtp = otpInput.value.trim();
+        if (enteredOtp === currentOtp) {
+            isPhoneVerified = true;
+            document.getElementById('otpStatus').style.display = 'block';
+            otpInput.disabled = true;
+            verifyOtpBtn.disabled = true;
+            resendOtpBtn.disabled = true;
+            checkFormValidity();
+        } else {
+            alert('Invalid OTP. Please try again.');
+        }
+    });
+
+    // Resend OTP
+    resendOtpBtn.addEventListener('click', function() {
+        sendOtpBtn.click();
+    });
+
+    // Check form validity
+    function checkFormValidity() {
+        submitBtn.disabled = !isPhoneVerified;
+    }
+
+    // Initialize
+    document.querySelector('input[value="customer"]').closest('.account-type-card').classList.add('selected');
+});
+</script>
+{% endblock %}
                             </div>
                             {% endfor %}
                         </div>

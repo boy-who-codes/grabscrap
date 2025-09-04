@@ -18,7 +18,7 @@ from .forms import UnifiedSignupForm, CustomAuthenticationForm, ProfileUpdateFor
 
 
 def login_view(request):
-    """Enhanced login with 2FA"""
+    """Enhanced login with 2FA (skip OTP for admin users)"""
     if request.method == 'POST':
         step = request.POST.get('step', '1')
         
@@ -33,7 +33,28 @@ def login_view(request):
                     messages.error(request, 'Please verify your email before logging in.')
                     return redirect('accounts:login')
                 
-                # Generate and send OTP
+                # Skip OTP for admin users
+                if user.is_staff or user.is_superuser:
+                    login(request, user)
+                    
+                    # Create login history
+                    try:
+                        LoginHistory = apps.get_model('core', 'LoginHistory')
+                        from core.utils import get_client_ip
+                        
+                        LoginHistory.objects.create(
+                            user=user,
+                            ip_address=get_client_ip(request),
+                            user_agent=request.META.get('HTTP_USER_AGENT', ''),
+                            is_successful=True
+                        )
+                    except Exception as e:
+                        print(f"Failed to create login history: {e}")
+                    
+                    messages.success(request, f'Welcome back, {user.full_name or user.username}!')
+                    return redirect('core:home')
+                
+                # Generate and send OTP for regular users
                 TwoFactorAuth = apps.get_model('core', 'TwoFactorAuth')
                 from core.utils import generate_otp, send_otp_email, get_client_ip
                 from datetime import timedelta
@@ -796,9 +817,9 @@ class RegisterView(CreateView):
     
     def form_valid(self, form):
         response = super().form_valid(form)
-        account_type = form.cleaned_data['account_type']
+        account_type = form.cleaned_data['user_type']
         
-        if account_type == 'seller':
+        if account_type == 'vendor':
             messages.success(
                 self.request, 
                 'Seller account created successfully! Please check your email for verification. You can start adding products after email verification.'
@@ -809,9 +830,15 @@ class RegisterView(CreateView):
                 'Account created successfully! Please check your email for verification.'
             )
         
-        # Send verification email (async with fallback)
+        # Send verification email with proper host
         from core.tasks import send_verification_email, send_email_with_fallback
-        send_email_with_fallback(send_verification_email, str(self.object.id))
+        from core.utils import get_current_site_url
+        
+        # Get the current site URL
+        site_url = get_current_site_url(self.request)
+        
+        # Send verification email with host info
+        send_email_with_fallback(send_verification_email, str(self.object.id), site_url)
         return response
     
     def form_invalid(self, form):

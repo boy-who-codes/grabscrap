@@ -28,10 +28,10 @@ def send_verification_email(user_id, request_host=None):
                 self.host = host
             
             def get_host(self):
-                return self.host or 'localhost:8000'
+                return self.host.replace('http://', '').replace('https://', '') if self.host else 'localhost'
             
             def is_secure(self):
-                return self.host and self.host.startswith('https')
+                return self.host and 'https://' in self.host if self.host else False
         
         mock_request = MockRequest(request_host) if request_host else None
         

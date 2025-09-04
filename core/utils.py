@@ -17,12 +17,18 @@ def generate_otp():
 def get_current_site_url(request=None):
     """Get current site URL based on request or settings"""
     if request:
+        # Check if request is secure (HTTPS)
         protocol = 'https' if request.is_secure() else 'http'
-        host = request.get_host()
+        host = request.get_host().split(':')[0]  # Remove port for clean URL
+        
+        # For production, force HTTPS
+        if not settings.DEBUG and protocol == 'http':
+            protocol = 'https'
+            
         return f"{protocol}://{host}"
     
     # Fallback to settings
-    return getattr(settings, 'FRONTEND_URL', 'http://localhost:8000')
+    return getattr(settings, 'FRONTEND_URL', 'http://localhost')
 
 
 def get_client_ip(request):
