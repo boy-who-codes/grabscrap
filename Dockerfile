@@ -11,8 +11,6 @@ WORKDIR /app
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
-    libpq-dev \
-    postgresql-client \
     redis-tools \
     curl \
     && rm -rf /var/lib/apt/lists/*
@@ -28,7 +26,7 @@ COPY . .
 RUN chmod +x docker-entrypoint.sh
 
 # Create media and static directories
-RUN mkdir -p media staticfiles logs
+RUN mkdir -p media staticfiles logs db
 
 EXPOSE 8000
 

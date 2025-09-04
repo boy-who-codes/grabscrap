@@ -1,13 +1,6 @@
 #!/bin/bash
 set -e
 
-# Wait for database
-echo "Waiting for database..."
-while ! pg_isready -h $DB_HOST -p $DB_PORT -U $DB_USER; do
-    sleep 1
-done
-echo "Database is ready!"
-
 # Wait for Redis
 echo "Waiting for Redis..."
 while ! redis-cli -h $REDIS_HOST -p $REDIS_PORT ping; do
