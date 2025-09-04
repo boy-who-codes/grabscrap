@@ -31,7 +31,7 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-*3wy2um!tglx^*$xu_*@t
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,testserver', cast=lambda v: [s.strip() for s in v.split(',')])
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -229,8 +229,16 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='KABAADWALA <noreply@kabaadwala.com>')
 
-# Frontend URL for email links
-FRONTEND_URL = config('FRONTEND_URL', default='http://127.0.0.1:8000')
+# Frontend URL for email links - will be set dynamically
+FRONTEND_URL = config('FRONTEND_URL', default='http://127.0.0.1')
+
+# Function to get dynamic frontend URL
+def get_frontend_url(request=None):
+    if request:
+        host = request.get_host().split(':')[0]  # Remove port
+        scheme = 'https' if request.is_secure() else 'http'
+        return f"{scheme}://{host}"
+    return FRONTEND_URL
 
 # Logging Configuration
 import os
