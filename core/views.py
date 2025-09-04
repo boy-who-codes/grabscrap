@@ -19,7 +19,7 @@ def health_check(request):
 def get_notifications(request):
     """Get user notifications page"""
     notifications = Notification.objects.filter(user=request.user)[:15]
-    unread_count = notifications.filter(is_read=False).count()
+    unread_count = Notification.objects.filter(user=request.user, is_read=False).count()
     
     context = {
         'notifications': notifications,

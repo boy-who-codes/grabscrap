@@ -35,7 +35,7 @@ services:
     volumes:
       - .:/app
       - media_files:/app/media
-      - static_files:/app/static
+      - static_files:/app/staticfiles
     ports:
       - "8000:8000"
     env_file:
