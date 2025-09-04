@@ -270,19 +270,30 @@ document.addEventListener('DOMContentLoaded', function() {
         // Simulate OTP generation
         currentOtp = Math.floor(100000 + Math.random() * 900000).toString();
         
+        // Show OTP in alert and autofill
+        alert(`Your OTP is: ${currentOtp}`);
+        
         {% if settings.DEBUG %}
         document.getElementById('debugOtp').textContent = currentOtp;
         {% endif %}
         
         otpSection.style.display = 'block';
+        otpInput.value = currentOtp; // Autofill OTP
         sendOtpBtn.textContent = 'OTP Sent';
         sendOtpBtn.disabled = true;
         
-        // Re-enable after 30 seconds
-        setTimeout(() => {
-            sendOtpBtn.disabled = false;
-            sendOtpBtn.innerHTML = '<i class="bi bi-phone"></i> Send OTP';
-        }, 30000);
+        // Start 1-minute countdown
+        let countdown = 60;
+        const countdownInterval = setInterval(() => {
+            countdown--;
+            sendOtpBtn.innerHTML = `<i class="bi bi-clock"></i> Resend in ${countdown}s`;
+            
+            if (countdown <= 0) {
+                clearInterval(countdownInterval);
+                sendOtpBtn.disabled = false;
+                sendOtpBtn.innerHTML = '<i class="bi bi-phone"></i> Send OTP';
+            }
+        }, 1000);
     });
 
     // Verify OTP
@@ -302,7 +313,31 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Resend OTP
     resendOtpBtn.addEventListener('click', function() {
-        sendOtpBtn.click();
+        // Generate new OTP
+        currentOtp = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        // Show OTP in alert and autofill
+        alert(`Your new OTP is: ${currentOtp}`);
+        
+        {% if settings.DEBUG %}
+        document.getElementById('debugOtp').textContent = currentOtp;
+        {% endif %}
+        
+        otpInput.value = currentOtp; // Autofill new OTP
+        
+        // Restart countdown
+        sendOtpBtn.disabled = true;
+        let countdown = 60;
+        const countdownInterval = setInterval(() => {
+            countdown--;
+            sendOtpBtn.innerHTML = `<i class="bi bi-clock"></i> Resend in ${countdown}s`;
+            
+            if (countdown <= 0) {
+                clearInterval(countdownInterval);
+                sendOtpBtn.disabled = false;
+                sendOtpBtn.innerHTML = '<i class="bi bi-phone"></i> Send OTP';
+            }
+        }, 1000);
     });
 
     // Check form validity
