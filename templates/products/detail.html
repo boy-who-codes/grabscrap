@@ -166,7 +166,7 @@ function startChat(productId) {
     .then(response => response.json())
     .then(data => {
         if (data.room_id) {
-            window.location.href = `/chat/room/${data.room_id}/`;
+            window.location.href = `{% url 'chat:room' room_id='ROOM_ID' %}`.replace('ROOM_ID', data.room_id);
         } else if (data.error) {
             alert(data.error);
         } else {
@@ -179,7 +179,7 @@ function startChat(productId) {
     });
     {% else %}
     alert('Please login to start a chat');
-    window.location.href = '/accounts/login/';
+    window.location.href = '{% url "accounts:login" %}';
     {% endif %}
 }
 </script>

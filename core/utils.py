@@ -153,7 +153,7 @@ def send_activation_email(user, request=None):
     
     # Get site URL
     site_url = get_current_site_url(request)
-    activation_url = f"{site_url}/accounts/verify/{uid}/{token}/"
+    activation_url = f"{site_url}/accounts/verify-email/{uid}/{token}/"
     
     subject = "KABAADWALA™ - Activate Your Account"
     

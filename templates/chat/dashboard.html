@@ -154,7 +154,7 @@
 let currentRoomId = '{{ current_room.id|default:"" }}';
 
 function selectRoom(roomId) {
-    window.location.href = `/chat/${roomId}/`;
+    window.location.href = `{% url 'chat:room' room_id='ROOM_ID' %}`.replace('ROOM_ID', roomId);
 }
 
 document.getElementById('fileInput').addEventListener('change', function(e) {

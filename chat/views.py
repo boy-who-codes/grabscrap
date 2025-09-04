@@ -101,7 +101,7 @@ You have received a new message on KABAADWALA™:
 From: {sender}
 Message: {message}
 
-Reply at: http://127.0.0.1:8000/chat/room/{room_id}/
+Reply at: {request.build_absolute_uri(f'/chat/room/{room_id}/')}
 
 ---
 KABAADWALA™ Team
