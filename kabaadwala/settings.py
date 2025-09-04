@@ -233,6 +233,17 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='KABAADWALA <noreply@k
 FRONTEND_URL = config('FRONTEND_URL', default='http://127.0.0.1:8000')
 
 # Logging Configuration
+import os
+try:
+    os.makedirs(BASE_DIR / 'logs', exist_ok=True)
+    log_file = BASE_DIR / 'logs' / 'django.log'
+    # Test if we can write to the log file
+    with open(log_file, 'a') as f:
+        pass
+    use_file_logging = True
+except (OSError, PermissionError):
+    use_file_logging = False
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -243,12 +254,6 @@ LOGGING = {
         },
     },
     'handlers': {
-        'file': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': BASE_DIR / 'logs' / 'django.log',
-            'formatter': 'verbose',
-        },
         'console': {
             'level': 'INFO',
             'class': 'logging.StreamHandler',
@@ -256,22 +261,34 @@ LOGGING = {
         },
     },
     'root': {
-        'handlers': ['console', 'file'],
+        'handlers': ['console'],
         'level': 'INFO',
     },
     'loggers': {
         'django': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console'],
             'level': 'INFO',
             'propagate': False,
         },
         'celery': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console'],
             'level': 'INFO',
             'propagate': False,
         },
     },
 }
+
+# Add file handler only if possible
+if use_file_logging:
+    LOGGING['handlers']['file'] = {
+        'level': 'INFO',
+        'class': 'logging.FileHandler',
+        'filename': BASE_DIR / 'logs' / 'django.log',
+        'formatter': 'verbose',
+    }
+    LOGGING['root']['handlers'].append('file')
+    LOGGING['loggers']['django']['handlers'].append('file')
+    LOGGING['loggers']['celery']['handlers'].append('file')
 
 # Razorpay Configuration
 RAZORPAY_KEY_ID = config('RAZORPAY_KEY_ID', default='rzp_test_key')

@@ -25,10 +25,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Create media and static directories
-RUN mkdir -p media staticfiles
-
-# Collect static files
-RUN python manage.py collectstatic --noinput
+RUN mkdir -p media staticfiles logs
 
 # Create entrypoint script
 RUN chmod +x docker-entrypoint.sh

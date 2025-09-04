@@ -19,6 +19,10 @@ echo "Redis is ready!"
 echo "Running migrations..."
 python manage.py migrate
 
+# Collect static files
+echo "Collecting static files..."
+python manage.py collectstatic --noinput
+
 # Setup defaults
 echo "Setting up defaults..."
 python manage.py setup_defaults
