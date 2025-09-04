@@ -24,11 +24,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project
 COPY . .
 
+# Make entrypoint script executable
+RUN chmod +x docker-entrypoint.sh
+
 # Create media and static directories
 RUN mkdir -p media staticfiles logs
-
-# Create entrypoint script
-RUN chmod +x docker-entrypoint.sh
 
 EXPOSE 8000
 
